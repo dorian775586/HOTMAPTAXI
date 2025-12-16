@@ -1,0 +1,183 @@
+/* ========== ОСНОВНОЙ КОНТЕЙНЕР ========== */
+.App {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* ========== КНОПКИ ========== */
+.add-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: #ffcc00;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+  color: black;
+}
+
+.search-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #ffffff;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+}
+
+/* ========== ПОИСК ========== */
+.search-box {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  background: #fff;
+  padding: 10px;
+  border-radius: 12px;
+  width: 230px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.search-results {
+  max-height: 160px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.search-item {
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  color: #333;
+}
+
+.search-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* ========== МОДАЛЬНОЕ ОКНО ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal {
+  background-color: #1e1e1e;
+  padding: 25px;
+  border-radius: 18px;
+  color: white;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.modal h2 { margin: 0 0 10px 0; text-align: center; }
+
+.modal input {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #2b2b2b;
+  color: white;
+  outline: none;
+}
+
+.submit-button {
+  background-color: #ffcc00;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  color: black;
+  margin-top: 10px;
+}
+
+/* ========== ПОП-АП (ПОЕХАЛИ!) ========== */
+.go-button {
+  padding: 10px;
+  background: #ffcc00;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  margin-top: 8px;
+  width: 100%;
+  color: black;
+}
+
+/* ========== ЧИСТЫЙ ОГНЕННЫЙ ПУЛЬС 🔥 ========== */
+.pulse-marker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 26px;
+  position: relative;
+  border: none !important;
+  background: none !important;
+}
+
+/* Пульс строго оранжевого цвета */
+.pulse-marker::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: #ff4500; /* OrangeRed */
+  border-radius: 50%;
+  z-index: -1;
+  animation: fire-pulse 2s infinite;
+}
+
+@keyframes fire-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    box-shadow: 0 0 8px 2px #ff8c00;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(3.5);
+    opacity: 0;
+    box-shadow: 0 0 15px 10px rgba(255, 69, 0, 0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}

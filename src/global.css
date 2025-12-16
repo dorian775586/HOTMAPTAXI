@@ -1,0 +1,25 @@
+/* src/global.css или src/index.css */
+
+/* Сбрасываем стандартные отступы браузера для всего экрана */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  overflow: hidden; /* Скрываем полосы прокрутки */
+}
+
+/* Устанавливаем высоту 100% для корневых элементов, чтобы карта могла растянуться */
+#root {
+  height: 100vh; /* Высота viewport */
+  width: 100vw;  /* Ширина viewport */
+  padding: 0;    /* Удаляем отступы по умолчанию */
+  max-width: none; /* УДАЛЯЕМ ОГРАНИЧЕНИЕ ШИРИНЫ! */
+  margin: 0;
+  text-align: left;
+}
+
+/* Стиль для контейнера карты */
+.leaflet-container {
+  height: 100vh; 
+  width: 100vw;
+}
