@@ -28,6 +28,7 @@ function App() {
   const [hotspots, setHotspots] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false); // Состояние сворачивания
   const [query, setQuery] = useState("");
   const [newSpot, setNewSpot] = useState({ lat: "", lng: "", label: "", description: "", time: "" });
   const [flyTarget, setFlyTarget] = useState(null);
@@ -72,16 +73,11 @@ function App() {
     window.open(`https://yandex.ru/maps/?rtext=~${lat},${lng}&rtt=auto`, "_blank");
   };
 
-  const validHeatmapPoints = hotspots
-    .filter(h => h.lat && h.lng)
-    .map(h => [Number(h.lat), Number(h.lng), 0.8]);
-
   return (
     <div className="App">
-      {/* КАРТА ВО ВЕСЬ ЭКРАН */}
       <MapContainer className="map-container" center={[55.7558, 37.6173]} zoom={11} zoomControl={false}>
-        <TileLayer url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png" />
-        {validHeatmapPoints.length > 0 && <HeatmapLayer points={validHeatmapPoints} />}
+        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+        {hotspots.length > 0 && <HeatmapLayer points={hotspots.map(h => [Number(h.lat), Number(h.lng), 0.8])} />}
         
         {hotspots.map((spot) => (
           <Marker
@@ -91,8 +87,8 @@ function App() {
             ref={ref => { if (ref) markerRefs.current[spot.id] = ref; }}
           >
             <Popup>
-              <div style={{ textAlign: 'center' }}>
-                <strong style={{ fontSize: '16px' }}>{spot.label || "Событие"}</strong><br />
+              <div className="custom-popup">
+                <strong>{spot.label || "Событие"}</strong><br />
                 <span>{spot.description}</span><br />
                 <button className="go-button" onClick={() => openYandexNavigator(spot.lat, spot.lng)}>
                   🚀 Поехали!
@@ -104,69 +100,64 @@ function App() {
         {flyTarget && <FlyToSpot target={flyTarget} />}
       </MapContainer>
 
-      {/* НИЖНЯЯ ПАНЕЛЬ ТАКСИ */}
-      <div className="bottom-panel">
-        <div className="panel-handle"></div>
+      <div className={`bottom-panel ${isPanelCollapsed ? "collapsed" : ""}`}>
+        <div className="panel-handle" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}></div>
         
-        {/* КНОПКА ПОИСКА (КУДА ЕДЕМ?) */}
         <div className="search-trigger" onClick={() => setSearchOpen(true)}>
           <span className="search-icon">🔍</span>
           <span className="search-text">Куда едем?</span>
         </div>
 
-        {/* 5 РАНДОМНЫХ / ПОСЛЕДНИХ ОГОНЬКОВ */}
-        <div className="quick-access">
-          <p className="panel-label">Рекомендуемые места</p>
-          <div className="hot-scroll">
-            {hotspots.slice(0, 5).map((spot) => (
-              <div key={spot.id} className="hot-card" onClick={() => setFlyTarget({ position: [Number(spot.lat), Number(spot.lng)], zoom: 15 })}>
-                <div className="hot-emoji">🔥</div>
-                <div className="hot-info">
-                  <span className="hot-name">{spot.label || "Точка"}</span>
-                  <span className="hot-subtext">{spot.time || "Сейчас"}</span>
+        <div className="panel-content">
+          <div className="quick-access">
+            <p className="panel-label">Рекомендуемые места</p>
+            <div className="hot-scroll">
+              {hotspots.slice(0, 5).map((spot) => (
+                <div key={spot.id} className="hot-card" onClick={() => {
+                  setFlyTarget({ position: [Number(spot.lat), Number(spot.lng)], zoom: 15 });
+                  if (window.innerWidth < 768) setIsPanelCollapsed(true);
+                }}>
+                  <div className="hot-emoji">🔥</div>
+                  <div className="hot-info">
+                    <span className="hot-name">{spot.label || "Точка"}</span>
+                    <span className="hot-subtext">{spot.time || "Сейчас"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel-actions">
+            <button className="action-btn add-btn" onClick={() => setModalOpen(true)}>Добавить точку</button>
+            <button className="action-btn main-btn" onClick={() => alert('Маршрут построен!')}>ПОГНАЛИ!</button>
+          </div>
+        </div>
+      </div>
+
+      {searchOpen && (
+        <div className="search-overlay">
+          <div className="search-header">
+            <button className="close-search" onClick={() => setSearchOpen(false)}>✕</button>
+            <input type="text" placeholder="Введите название..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+          </div>
+          <div className="search-results-list">
+            {hotspots.filter(h => (h.label || "").toLowerCase().includes(query.toLowerCase())).map(spot => (
+              <div key={spot.id} className="result-item" onClick={() => {
+                setFlyTarget({ position: [Number(spot.lat), Number(spot.lng)], zoom: 16 });
+                setSearchOpen(false);
+                setIsPanelCollapsed(true);
+              }}>
+                <span className="res-emoji">🔥</span>
+                <div className="res-content">
+                  <span className="res-title">{spot.label}</span>
+                  <span className="res-addr">{spot.description}</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        {/* КНОПКИ ДЕЙСТВИЙ */}
-        <div className="panel-actions">
-          <button className="action-btn add-btn" onClick={() => setModalOpen(true)}>Добавить точку</button>
-          <button className="action-btn main-btn" onClick={() => alert('Выберите точку на карте!')}>Потежеть!</button>
-        </div>
-      </div>
-
-      {/* ПОИСКОВОЕ ОКНО */}
-      {searchOpen && (
-        <div className="search-overlay">
-          <div className="search-header">
-            <button className="close-search" onClick={() => setSearchOpen(false)}>✕</button>
-            <input 
-              type="text" placeholder="Введите название..." value={query} 
-              onChange={e => setQuery(e.target.value)} autoFocus 
-            />
-          </div>
-          <div className="search-results-list">
-            {hotspots
-              .filter(h => (h.label || "").toLowerCase().includes(query.toLowerCase()))
-              .map(spot => (
-                <div key={spot.id} className="result-item" onClick={() => {
-                  setFlyTarget({ position: [Number(spot.lat), Number(spot.lng)], zoom: 16 });
-                  setSearchOpen(false);
-                }}>
-                  <span className="res-emoji">🔥</span>
-                  <div className="res-content">
-                    <span className="res-title">{spot.label}</span>
-                    <span className="res-addr">{spot.description}</span>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
       )}
 
-      {/* МОДАЛКА (ТВОЯ СТАРАЯ) */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
