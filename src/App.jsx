@@ -7,7 +7,7 @@ import { collection, onSnapshot, addDoc } from "firebase/firestore";
 import HeatmapLayer from "./HeatmapLayer";
 import "./App.css";
 
-// Фикс иконок Leaflet для корректного отображения
+// Фикс иконок Leaflet
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import shadowUrl from "leaflet/dist/images/marker-shadow.png";
@@ -15,7 +15,7 @@ import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-/* ===== ПЛАВНЫЙ ПЕРЕЛЁТ ===== */
+/* ПЛАВНЫЙ ПЕРЕЛЁТ */
 const FlyToSpot = ({ target }) => {
   const map = useMap();
   useEffect(() => {
@@ -35,7 +35,6 @@ function App() {
   const [flyTarget, setFlyTarget] = useState(null);
   const markerRefs = useRef({});
 
-  // ИСПРАВЛЕННАЯ ИКОНКА: Огонек по центру без лишних фонов
   const pulseIcon = new L.DivIcon({
     className: "pulse-marker",
     html: `<div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">🔥</div>`,
@@ -44,8 +43,10 @@ function App() {
   });
 
   useEffect(() => {
+    // Подписываемся на данные
     const unsub = onSnapshot(collection(db, "hotspots"), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log("Данные из БД обновлены, количество:", data.length);
       setHotspots(data);
     });
     return () => unsub();
@@ -71,18 +72,30 @@ function App() {
       setNewSpot({ lat: "", lng: "", label: "", description: "", time: "" });
       setModalOpen(false);
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка при добавлении:", err);
     }
   };
 
   const openYandexNavigator = (lat, lng) => {
-    // Маршрут "от меня" до точки
     const url = `https://yandex.ru/maps/?rtext=~${lat},${lng}&rtt=auto`;
     window.open(url, "_blank");
   };
 
+  // Важно: принудительно превращаем координаты в числа для теплового слоя
+  const validHeatmapPoints = hotspots
+    .filter(h => h.lat && h.lng)
+    .map(h => [Number(h.lat), Number(h.lng), 0.8]);
+
   return (
     <div className="App">
+      {/* Счетчик для проверки связи на продакшене */}
+      <div style={{
+        position: 'absolute', top: 70, left: 20, zIndex: 1000, 
+        background: 'white', padding: '5px 10px', borderRadius: '8px', fontSize: '12px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+      }}>
+        Точек в базе: {hotspots.length}
+      </div>
+
       <button className="add-button" onClick={() => setModalOpen(true)}>Добавить точку</button>
       <button className="search-toggle" onClick={() => setSearchOpen(!searchOpen)}>🔍</button>
 
@@ -100,7 +113,7 @@ function App() {
               .filter(h => (h.label || "").toLowerCase().includes(query.toLowerCase()))
               .map(spot => (
                 <div key={spot.id} className="search-item" onClick={() => {
-                  setFlyTarget({ id: spot.id, position: [spot.lat, spot.lng], zoom: 16 });
+                  setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 16 });
                   setSearchOpen(false);
                   setQuery("");
                 }}>
@@ -126,16 +139,21 @@ function App() {
       )}
 
       <MapContainer className="map-container" center={[55.75, 37.61]} zoom={11}>
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-        <HeatmapLayer points={hotspots.map(h => [h.lat, h.lng, h.intensity || 0.5])} />
+        {/* КАРТА НА РУССКОМ (OSM Standard) */}
+        <TileLayer 
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+          attribution='&copy; OpenStreetMap contributors'
+        />
+
+        {validHeatmapPoints.length > 0 && <HeatmapLayer points={validHeatmapPoints} />}
 
         {hotspots.map((spot) => (
           <Marker
             key={spot.id}
-            position={[spot.lat, spot.lng]}
+            position={[Number(spot.lat), Number(spot.lng)]}
             icon={pulseIcon}
             ref={ref => { if (ref) markerRefs.current[spot.id] = ref; }}
-            eventHandlers={{ click: () => setFlyTarget({ id: spot.id, position: [spot.lat, spot.lng], zoom: 16 }) }}
+            eventHandlers={{ click: () => setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 16 }) }}
           >
             <Popup>
               <strong>{spot.label || "Событие"}</strong><br />
