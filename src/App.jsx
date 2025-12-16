@@ -7,7 +7,7 @@ import { collection, onSnapshot, addDoc } from "firebase/firestore";
 import HeatmapLayer from "./HeatmapLayer";
 import "./App.css";
 
-// Фикс иконок
+// Фикс иконок Leaflet
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import shadowUrl from "leaflet/dist/images/marker-shadow.png";
@@ -18,7 +18,7 @@ const FlyToSpot = ({ target }) => {
   const map = useMap();
   useEffect(() => {
     if (target) {
-      map.flyTo(target.position, target.zoom, { duration: 1.5 });
+      map.flyTo(target.position, target.zoom, { duration: 1.2, easeLinearity: 0.25 });
     }
   }, [target, map]);
   return null;
@@ -54,7 +54,7 @@ function App() {
     if (flyTarget && flyTarget.id && markerRefs.current[flyTarget.id]) {
       setTimeout(() => {
         markerRefs.current[flyTarget.id].openPopup();
-      }, 1600);
+      }, 1300);
     }
   }, [flyTarget]);
 
@@ -77,17 +77,11 @@ function App() {
       });
       setNewSpot({ lat: "", lng: "", label: "", description: "", time: "" });
       setModalOpen(false);
-    } catch (err) { alert("Ошибка сохранения"); }
+    } catch (err) { alert("Ошибка при сохранении"); }
   };
 
   return (
     <div className="App">
-      <div 
-        className="secret-box"
-        onMouseDown={handleStart} onMouseUp={handleEnd} 
-        onTouchStart={handleStart} onTouchEnd={handleEnd}
-      >i</div>
-
       <MapContainer className="map-container" center={[55.7558, 37.6173]} zoom={11} zoomControl={false}>
         <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
         {hotspots.length > 0 && <HeatmapLayer points={hotspots.map(h => [Number(h.lat), Number(h.lng), 0.8])} />}
@@ -114,6 +108,8 @@ function App() {
         {flyTarget && <FlyToSpot target={flyTarget} />}
       </MapContainer>
 
+      <div className="secret-box" onMouseDown={handleStart} onMouseUp={handleEnd} onTouchStart={handleStart} onTouchEnd={handleEnd}>i</div>
+
       <div className={`bottom-panel ${isPanelCollapsed ? "collapsed" : ""}`}>
         <div className="panel-handle" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}></div>
         
@@ -127,7 +123,7 @@ function App() {
           <div className="hot-scroll">
             {hotspots.slice(0, 10).map((spot) => (
               <div key={spot.id} className="hot-card" onClick={() => {
-                setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 15 });
+                setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 14 });
                 setIsPanelCollapsed(true);
               }}>
                 <div className="hot-emoji">🔥</div>
@@ -144,23 +140,23 @@ function App() {
       {searchOpen && (
         <div className="search-overlay">
           <div className="search-header">
+            <input type="text" placeholder="Поиск места..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
             <button className="close-search" onClick={() => setSearchOpen(false)}>✕</button>
-            <input type="text" placeholder="Поиск..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
           </div>
           <div className="search-results-list">
             {hotspots.filter(h => (h.label || "").toLowerCase().includes(query.toLowerCase())).map(spot => (
               <div key={spot.id} className="result-item" onClick={() => {
-                setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 16 });
+                setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 14 });
                 setSearchOpen(false);
                 setIsPanelCollapsed(true);
               }}>
                 <span className="res-emoji">🔥</span>
                 <div className="res-content">
-                  <span className="res-title">{spot.label}</span>
-                  <div className="res-details">
-                    <span className="res-time">{spot.time}</span>
-                    <p className="res-addr">{spot.description}</p>
+                  <div className="res-row-main">
+                    <span className="res-title">{spot.label}</span>
+                    <span className="res-time-badge">{spot.time}</span>
                   </div>
+                  <p className="res-addr">{spot.description}</p>
                 </div>
               </div>
             ))}
@@ -171,7 +167,7 @@ function App() {
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3 style={{margin: "0 0 10px 0", color: "#ffcc00"}}>Новая точка</h3>
+            <h3 className="modal-title">Новая точка</h3>
             <input placeholder="Название" onChange={e => setNewSpot({...newSpot, label: e.target.value})} />
             <input placeholder="Описание" onChange={e => setNewSpot({...newSpot, description: e.target.value})} />
             <input placeholder="Время" onChange={e => setNewSpot({...newSpot, time: e.target.value})} />

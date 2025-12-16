@@ -1,47 +1,50 @@
-/* ЖЕСТКИЙ СБРОС */
+/* Полный сброс для исключения обрезанных краев */
 html, body, #root {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  position: fixed; /* Чтобы не скроллился сам body */
+  position: fixed;
+  background-color: #f0f0f0;
 }
 
 .App {
   width: 100%;
   height: 100%;
   position: relative;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* КАРТА НА ВЕСЬ ЭКРАН - ПРИНУДИТЕЛЬНО */
+/* Карта - жестко на весь экран */
 .map-container {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   z-index: 1;
 }
 
-/* СЕКРЕТНЫЙ КВАДРАТ (маленький и прозрачный) */
+/* Секретный квадрат */
 .secret-box {
   position: fixed;
   top: env(safe-area-inset-top, 10px);
-  right: 10px;
-  width: 20px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.2);
+  right: 15px;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
   z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  color: rgba(0,0,0,0.2);
-  border-radius: 3px;
+  font-size: 11px;
+  color: rgba(0,0,0,0.1);
+  border-radius: 4px;
   cursor: pointer;
 }
 
-/* ПАНЕЛЬ - ФИКС ХВОСТИКА */
+/* Панель - хвостик 95px */
 .bottom-panel {
   position: fixed;
   bottom: 0;
@@ -49,100 +52,174 @@ html, body, #root {
   right: 0;
   background: white;
   z-index: 1000;
-  border-radius: 24px 24px 0 0;
-  padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
-  box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
-  transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
-  will-change: transform;
+  border-radius: 28px 28px 0 0;
+  padding: 10px 20px calc(25px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.12);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Свернутое состояние: уезжает вниз, оставляя 90px сверху */
 .bottom-panel.collapsed {
-  transform: translateY(calc(100% - 90px));
+  transform: translateY(calc(100% - 95px));
 }
 
 .panel-handle {
-  width: 40px;
+  width: 36px;
   height: 4px;
-  background: #ddd;
+  background: #ebebeb;
   border-radius: 2px;
-  margin: 0 auto 15px;
+  margin: 5px auto 15px;
 }
 
 .search-trigger {
-  background: #f2f2f2;
-  border-radius: 12px;
-  padding: 14px;
+  background: #f1f1f2;
+  border-radius: 16px;
+  padding: 15px 18px;
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
 }
 
-.search-text { font-size: 17px; font-weight: 500; color: #555; }
+.search-text { font-size: 17px; font-weight: 500; color: #444; }
 
-.panel-label { font-size: 12px; font-weight: 900; margin-bottom: 10px; color: #333; }
+.panel-label { font-size: 13px; font-weight: 800; margin-bottom: 12px; color: #111; letter-spacing: 0.3px; }
 
-.hot-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+.hot-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
 .hot-scroll::-webkit-scrollbar { display: none; }
 
 .hot-card {
-  min-width: 130px;
-  background: #f9f9f9;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid #eee;
+  min-width: 135px;
+  background: #f8f8f9;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid #f0f0f1;
 }
 
-.hot-name { font-weight: 700; font-size: 14px; display: block; }
-.hot-subtext { color: #ff4500; font-size: 11px; font-weight: 600; }
+.hot-name { font-weight: 700; font-size: 14px; color: #000; display: block; }
+.hot-subtext { color: #ff4500; font-size: 11px; font-weight: 700; margin-top: 2px; display: block; }
 
-/* МОДАЛКА (ФИКС РАЗМЕРА) */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.8);
-  display: flex; justify-content: center; align-items: center;
-  z-index: 3000;
-}
-.modal {
-  background: #1a1a1a;
-  padding: 20px;
-  border-radius: 20px;
-  width: 80%;
-  max-width: 300px;
+/* Поиск */
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  background: white;
+  z-index: 2500;
+  padding: env(safe-area-inset-top, 20px) 20px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
-.modal input { padding: 12px; border-radius: 10px; border: none; background: #333; color: white; }
-.coords-row { display: flex; gap: 8px; }
-.coords-row input { width: 50%; }
-.submit-button { background: #ffcc00; border: none; padding: 15px; border-radius: 12px; font-weight: bold; }
 
-/* ПОПАПЫ */
-.custom-popup { min-width: 140px; }
-.popup-header { font-weight: 800; font-size: 16px; margin-bottom: 2px; }
-.popup-time { color: #ff4500; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
-.popup-desc { font-size: 13px; color: #555; border-top: 1px solid #eee; padding-top: 5px; }
-.go-button { background: #ffcc00; border: none; padding: 10px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 10px; }
+.search-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
 
-/* ПОИСК */
-.search-overlay { position: fixed; inset: 0; background: white; z-index: 2500; padding: 15px; }
-.search-header { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
-.close-search { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f0f0f0; }
-.res-details { border-top: 1px solid #f0f0f0; margin-top: 5px; padding-top: 5px; }
-.res-time { color: #ff4500; font-weight: bold; font-size: 11px; }
-.res-addr { margin: 0; font-size: 13px; color: #777; }
+.search-header input {
+  flex: 1;
+  border: none;
+  background: #f1f1f2;
+  padding: 16px 20px;
+  border-radius: 14px;
+  font-size: 18px;
+  outline: none;
+  font-weight: 500;
+}
 
-/* МАРКЕР */
+.close-search { background: none; border: none; font-size: 22px; color: #999; cursor: pointer; padding: 5px; }
+
+.search-results-list { flex: 1; overflow-y: auto; }
+
+.result-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 18px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.res-content { flex: 1; }
+.res-row-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.res-title { font-weight: 700; font-size: 16px; color: #111; }
+.res-time-badge { font-size: 11px; font-weight: 800; color: #ff4500; text-transform: uppercase; }
+.res-addr { margin: 0; font-size: 13px; color: #777; line-height: 1.4; }
+
+/* Попапы и Кнопки */
+.custom-popup { min-width: 160px; padding: 5px 0; }
+.popup-header { font-weight: 800; font-size: 17px; color: #000; }
+.popup-time { color: #ff4500; font-weight: 700; font-size: 13px; margin: 4px 0 6px; }
+.popup-desc { font-size: 13px; color: #444; border-top: 1px solid #f0f0f0; padding-top: 8px; line-height: 1.4; }
+
+.go-button {
+  background: #ffcc00;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 800;
+  width: 100%;
+  margin-top: 12px;
+  cursor: pointer;
+  color: #000 !important;
+  /* Фикс совместимости */
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Модалка */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+
+.modal {
+  background: #111;
+  padding: 25px;
+  border-radius: 24px;
+  width: 85%;
+  max-width: 320px;
+  color: white;
+  box-sizing: border-box;
+}
+
+.modal-title { margin: 0 0 15px 0; font-size: 18px; font-weight: 800; text-align: center; }
+
+.modal input {
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #222;
+  color: white;
+  margin-bottom: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.submit-button {
+  background: #ffcc00;
+  border: none;
+  padding: 16px;
+  border-radius: 14px;
+  font-weight: 800;
+  width: 100%;
+  margin-top: 10px;
+  color: #000;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Маркер */
 .pulse-marker { display: flex; justify-content: center; align-items: center; }
 .fire-emoji { font-size: 26px; z-index: 2; position: relative; }
 .pulse-marker::before {
-  content: ''; position: absolute; width: 8px; height: 8px;
+  content: ''; position: absolute; width: 10px; height: 10px;
   background: #ff4500; border-radius: 50%; animation: fire-pulse 2s infinite;
 }
-@keyframes fire-pulse {
-  0% { transform: scale(1); opacity: 1; }
-  70% { transform: scale(4); opacity: 0; }
-  100% { opacity: 0; }
-}
+@keyframes fire-pulse { 0% { transform: scale(1); opacity: 1; } 70% { transform: scale(4); opacity: 0; } 100% { opacity: 0; } }
