@@ -28,7 +28,7 @@ function App() {
   const [hotspots, setHotspots] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false); // Состояние сворачивания
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
   const [query, setQuery] = useState("");
   const [newSpot, setNewSpot] = useState({ lat: "", lng: "", label: "", description: "", time: "" });
   const [flyTarget, setFlyTarget] = useState(null);
@@ -48,6 +48,15 @@ function App() {
     });
     return () => unsub();
   }, []);
+
+  // Автоматическое открытие попапа при полете к точке
+  useEffect(() => {
+    if (flyTarget && flyTarget.id && markerRefs.current[flyTarget.id]) {
+      setTimeout(() => {
+        markerRefs.current[flyTarget.id].openPopup();
+      }, 1600);
+    }
+  }, [flyTarget]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -88,8 +97,9 @@ function App() {
           >
             <Popup>
               <div className="custom-popup">
-                <strong>{spot.label || "Событие"}</strong><br />
-                <span>{spot.description}</span><br />
+                <div className="popup-header">{spot.label || "Событие"}</div>
+                <div className="popup-time">⏰ {spot.time || "Сейчас"}</div>
+                <div className="popup-desc">{spot.description}</div>
                 <button className="go-button" onClick={() => openYandexNavigator(spot.lat, spot.lng)}>
                   🚀 Поехали!
                 </button>
@@ -103,7 +113,7 @@ function App() {
       <div className={`bottom-panel ${isPanelCollapsed ? "collapsed" : ""}`}>
         <div className="panel-handle" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}></div>
         
-        <div className="search-trigger" onClick={() => setSearchOpen(true)}>
+        <div className="search-trigger" onClick={() => { setSearchOpen(true); setIsPanelCollapsed(false); }}>
           <span className="search-icon">🔍</span>
           <span className="search-text">Куда едем?</span>
         </div>
@@ -114,8 +124,8 @@ function App() {
             <div className="hot-scroll">
               {hotspots.slice(0, 5).map((spot) => (
                 <div key={spot.id} className="hot-card" onClick={() => {
-                  setFlyTarget({ position: [Number(spot.lat), Number(spot.lng)], zoom: 15 });
-                  if (window.innerWidth < 768) setIsPanelCollapsed(true);
+                  setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 15 });
+                  setIsPanelCollapsed(true); // Сворачиваем панель при клике
                 }}>
                   <div className="hot-emoji">🔥</div>
                   <div className="hot-info">
@@ -129,7 +139,9 @@ function App() {
 
           <div className="panel-actions">
             <button className="action-btn add-btn" onClick={() => setModalOpen(true)}>Добавить точку</button>
-            <button className="action-btn main-btn" onClick={() => alert('Маршрут построен!')}>ПОГНАЛИ!</button>
+            <button className="action-btn main-btn" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}>
+                {isPanelCollapsed ? "ОТКРЫТЬ МЕНЮ" : "ПОГНАЛИ!"}
+            </button>
           </div>
         </div>
       </div>
@@ -143,14 +155,14 @@ function App() {
           <div className="search-results-list">
             {hotspots.filter(h => (h.label || "").toLowerCase().includes(query.toLowerCase())).map(spot => (
               <div key={spot.id} className="result-item" onClick={() => {
-                setFlyTarget({ position: [Number(spot.lat), Number(spot.lng)], zoom: 16 });
+                setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 16 });
                 setSearchOpen(false);
-                setIsPanelCollapsed(true);
+                setIsPanelCollapsed(true); // Сворачиваем после поиска
               }}>
                 <span className="res-emoji">🔥</span>
                 <div className="res-content">
                   <span className="res-title">{spot.label}</span>
-                  <span className="res-addr">{spot.description}</span>
+                  <span className="res-addr">{spot.time} — {spot.description}</span>
                 </div>
               </div>
             ))}
@@ -164,7 +176,7 @@ function App() {
             <h2>Новое событие</h2>
             <input name="label" placeholder="Название" onChange={handleInputChange} />
             <input name="description" placeholder="Описание" onChange={handleInputChange} />
-            <input name="time" placeholder="Время" onChange={handleInputChange} />
+            <input name="time" placeholder="Время (например, 20:00)" onChange={handleInputChange} />
             <input name="lat" type="number" step="any" placeholder="Широта" onChange={handleInputChange} />
             <input name="lng" type="number" step="any" placeholder="Долгота" onChange={handleInputChange} />
             <button className="submit-button" onClick={handleAddSpot}>Добавить</button>

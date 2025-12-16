@@ -13,7 +13,7 @@
   z-index: 1;
 }
 
-/* ========== НИЖНЯЯ ПАНЕЛЬ С АНИМАЦИЕЙ ========== */
+/* ========== НИЖНЯЯ ПАНЕЛЬ ========== */
 .bottom-panel {
   position: absolute;
   bottom: 0;
@@ -27,9 +27,8 @@
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Если панель свернута — уезжает вниз, оставляя только заголовок/ручку */
 .bottom-panel.collapsed {
-  transform: translateY(calc(100% - 70px));
+  transform: translateY(calc(100% - 80px));
 }
 
 .panel-handle {
@@ -39,7 +38,7 @@
   border-radius: 2px;
   margin: 0 auto 15px;
   cursor: pointer;
-  padding: 10px 0; /* Увеличим зону клика */
+  padding: 10px 0;
   background-clip: content-box;
 }
 
@@ -55,14 +54,6 @@
 }
 
 .search-text { font-size: 18px; font-weight: 500; color: #555; }
-
-.panel-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #999;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
 
 .hot-scroll {
   display: flex;
@@ -103,17 +94,43 @@
 .add-btn { background: #f0f0f0; color: #333; }
 .main-btn { background: #ffcc00; color: black; }
 
-/* КРАСИВАЯ КНОПКА ПОЕХАЛИ В ПОПАПЕ */
-.custom-popup { text-align: center; }
+/* ========== ОБНОВЛЕННЫЙ ПОПАП ========== */
+.custom-popup {
+  text-align: left;
+  min-width: 150px;
+}
+
+.popup-header {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.popup-time {
+  font-size: 13px;
+  color: #ff4500;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.popup-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
 .go-button {
   background: #ffcc00;
   border: none;
-  padding: 8px 15px;
+  padding: 10px;
   border-radius: 8px;
   font-weight: bold;
-  margin-top: 10px;
   cursor: pointer;
   width: 100%;
+  color: black;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* ОГНЕННЫЙ ПУЛЬС */
@@ -141,14 +158,9 @@
   100% { transform: scale(1); opacity: 0; }
 }
 
-/* АДАПТИВНОСТЬ ДЛЯ МОБИЛОК */
 @media (max-width: 768px) {
   .bottom-panel {
-    padding: 12px 15px 20px;
-  }
-  .action-btn {
-    padding: 14px;
-    font-size: 14px;
+    padding-bottom: 40px;
   }
 }
 
