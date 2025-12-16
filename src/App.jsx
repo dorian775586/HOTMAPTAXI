@@ -50,17 +50,17 @@ function App() {
     return () => unsub();
   }, []);
 
-  // Логика зажатия кнопки (Secret Button)
   const handleStart = () => {
     timerRef.current = setTimeout(() => {
       setModalOpen(true);
-    }, 2000); // 2 секунды удержания
+      if (window.navigator.vibrate) window.navigator.vibrate(50); // Легкая вибрация при активации
+    }, 2000);
   };
   const handleEnd = () => clearTimeout(timerRef.current);
 
   const handleAddSpot = async (e) => {
     e.preventDefault();
-    if (!newSpot.lat || !newSpot.lng) return alert("Нужны координаты");
+    if (!newSpot.lat || !newSpot.lng) return alert("Введите координаты");
     try {
       await addDoc(collection(db, "hotspots"), {
         ...newSpot,
@@ -75,19 +75,17 @@ function App() {
 
   return (
     <div className="App">
-      {/* Секретная кнопка Инфо */}
       <div 
-        className="secret-info-btn"
-        onMouseDown={handleStart} 
-        onMouseUp={handleEnd} 
-        onTouchStart={handleStart} 
-        onTouchEnd={handleEnd}
-      >
-        ⓘ
-      </div>
+        className="secret-box"
+        onMouseDown={handleStart} onMouseUp={handleEnd} 
+        onTouchStart={handleStart} onTouchEnd={handleEnd}
+      >i</div>
 
       <MapContainer className="map-container" center={[55.7558, 37.6173]} zoom={11} zoomControl={false}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer 
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OpenStreetMap'
+        />
         {hotspots.length > 0 && <HeatmapLayer points={hotspots.map(h => [Number(h.lat), Number(h.lng), 0.8])} />}
         
         {hotspots.map((spot) => (
@@ -123,7 +121,7 @@ function App() {
         <div className="panel-content">
           <p className="panel-label">РЕКОМЕНДУЕМЫЕ МЕСТА 🔥</p>
           <div className="hot-scroll">
-            {hotspots.slice(0, 8).map((spot) => (
+            {hotspots.slice(0, 10).map((spot) => (
               <div key={spot.id} className="hot-card" onClick={() => {
                 setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 15 });
                 setIsPanelCollapsed(true);
@@ -169,13 +167,15 @@ function App() {
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2 style={{margin: 0}}>Новая точка</h2>
+            <h3 style={{margin: "0 0 10px 0", color: "#ffcc00"}}>Новая точка</h3>
             <input name="label" placeholder="Название" onChange={e => setNewSpot({...newSpot, label: e.target.value})} />
             <input name="description" placeholder="Описание" onChange={e => setNewSpot({...newSpot, description: e.target.value})} />
             <input name="time" placeholder="Время" onChange={e => setNewSpot({...newSpot, time: e.target.value})} />
-            <input name="lat" type="number" step="any" placeholder="Широта" onChange={e => setNewSpot({...newSpot, lat: e.target.value})} />
-            <input name="lng" type="number" step="any" placeholder="Долгота" onChange={e => setNewSpot({...newSpot, lng: e.target.value})} />
-            <button className="submit-button" onClick={handleAddSpot}>Добавить на карту</button>
+            <div className="coords-row">
+              <input name="lat" type="number" step="any" placeholder="Широта" onChange={e => setNewSpot({...newSpot, lat: e.target.value})} />
+              <input name="lng" type="number" step="any" placeholder="Долгота" onChange={e => setNewSpot({...newSpot, lng: e.target.value})} />
+            </div>
+            <button className="submit-button" onClick={handleAddSpot}>ДОБАВИТЬ</button>
           </div>
         </div>
       )}
