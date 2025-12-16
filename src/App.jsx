@@ -35,7 +35,7 @@ function App() {
   const [flyTarget, setFlyTarget] = useState(null);
   const markerRefs = useRef({});
 
-  // Стильная иконка огонька
+  // Иконка огонька
   const pulseIcon = new L.DivIcon({
     className: "pulse-marker",
     html: `<div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">🔥</div>`,
@@ -44,10 +44,10 @@ function App() {
   });
 
   useEffect(() => {
-    // Подписываемся на коллекцию hotspots в реальном времени
+    // Подписка на Firebase Firestore
     const unsub = onSnapshot(collection(db, "hotspots"), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      console.log("Данные из БД обновлены, количество:", data.length);
+      console.log("Данные обновлены:", data.length);
       setHotspots(data);
     });
     return () => unsub();
@@ -82,14 +82,14 @@ function App() {
     window.open(url, "_blank");
   };
 
-  // Подготовка данных для теплового слоя с гарантией числового формата
+  // Преобразование координат в числа для HeatmapLayer
   const validHeatmapPoints = hotspots
     .filter(h => h.lat && h.lng)
     .map(h => [Number(h.lat), Number(h.lng), 0.8]);
 
   return (
     <div className="App">
-      {/* Счетчик для быстрой проверки связи с базой */}
+      {/* Счетчик связи с базой данных */}
       <div style={{
         position: 'absolute', top: 70, left: 20, zIndex: 1000, 
         background: 'rgba(255,255,255,0.9)', padding: '5px 12px', borderRadius: '20px', 
@@ -119,7 +119,7 @@ function App() {
                   setSearchOpen(false);
                   setQuery("");
                 }}>
-                  {spot.label || "Событие без названия"}
+                  {spot.label || "Событие"}
                 </div>
               ))}
           </div>
@@ -130,34 +130,28 @@ function App() {
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Новое событие</h2>
-            <input name="label" placeholder="Название (например, Центр)" value={newSpot.label} onChange={handleInputChange} />
+            <input name="label" placeholder="Название" value={newSpot.label} onChange={handleInputChange} />
             <input name="description" placeholder="Описание" value={newSpot.description} onChange={handleInputChange} />
-            <input name="time" placeholder="Время (например, сейчас)" value={newSpot.time} onChange={handleInputChange} />
-            <input name="lat" type="number" step="any" placeholder="Широта (55.75)" value={newSpot.lat} onChange={handleInputChange} />
-            <input name="lng" type="number" step="any" placeholder="Долгота (37.61)" value={newSpot.lng} onChange={handleInputChange} />
-            <button className="submit-button" onClick={handleAddSpot}>Добавить на карту</button>
+            <input name="time" placeholder="Время" value={newSpot.time} onChange={handleInputChange} />
+            <input name="lat" type="number" step="any" placeholder="Широта" value={newSpot.lat} onChange={handleInputChange} />
+            <input name="lng" type="number" step="any" placeholder="Долгота" value={newSpot.lng} onChange={handleInputChange} />
+            <button className="submit-button" onClick={handleAddSpot}>Добавить</button>
           </div>
         </div>
       )}
 
       <MapContainer className="map-container" center={[55.7558, 37.6173]} zoom={11}>
         
-        {/* СЛОЙ 1: Стильный дизайн Voyager без подписей */}
+        {/* ГАРАНТИРОВАННО РУССКИЙ ЯЗЫК (OSM France) */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OpenStreetMap, &copy; CARTO'
+          url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
+          attribution='&copy; OpenStreetMap France'
         />
 
-        {/* СЛОЙ 2: Только русские названия поверх карты */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OpenStreetMap, &copy; CARTO'
-        />
-
-        {/* ТЕПЛОВАЯ КАРТА */}
+        {/* ТЕПЛОВОЙ СЛОЙ */}
         {validHeatmapPoints.length > 0 && <HeatmapLayer points={validHeatmapPoints} />}
 
-        {/* МАРКЕРЫ-ОГОНЬКИ */}
+        {/* МАРКЕРЫ */}
         {hotspots.map((spot) => (
           <Marker
             key={spot.id}
@@ -170,10 +164,9 @@ function App() {
               <div style={{ textAlign: 'center' }}>
                 <strong style={{ fontSize: '16px' }}>{spot.label || "Событие"}</strong><br />
                 <span style={{ color: '#666' }}>{spot.description}</span><br />
-                <small>{spot.time}</small><br />
                 <button 
                   className="go-button" 
-                  style={{ marginTop: '10px', background: '#ffcc00', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer' }}
+                  style={{ marginTop: '10px', background: '#ffcc00', border: 'none', padding: '5px 10px', borderRadius: '5px' }}
                   onClick={() => openYandexNavigator(spot.lat, spot.lng)}
                 >
                   🚀 Поехали!
