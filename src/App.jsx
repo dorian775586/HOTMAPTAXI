@@ -7,14 +7,13 @@ import { collection, onSnapshot, addDoc } from "firebase/firestore";
 import HeatmapLayer from "./HeatmapLayer";
 import "./App.css";
 
-// Исправление иконок Leaflet
+// Фикс иконок
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-// Компонент для плавного полета к точке
 const FlyToSpot = ({ target }) => {
   const map = useMap();
   useEffect(() => {
@@ -43,7 +42,6 @@ function App() {
     iconAnchor: [15, 15],
   });
 
-  // Загрузка данных из Firebase
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "hotspots"), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -52,7 +50,6 @@ function App() {
     return () => unsub();
   }, []);
 
-  // Открытие попапа после прилета к маркеру
   useEffect(() => {
     if (flyTarget && flyTarget.id && markerRefs.current[flyTarget.id]) {
       setTimeout(() => {
@@ -61,18 +58,16 @@ function App() {
     }
   }, [flyTarget]);
 
-  // Логика зажатия секретной кнопки (2 секунды)
   const handleStart = () => {
     timerRef.current = setTimeout(() => {
       setModalOpen(true);
-      if (window.navigator.vibrate) window.navigator.vibrate(50);
+      if (window.navigator.vibrate) window.navigator.vibrate(60);
     }, 2000);
   };
   const handleEnd = () => clearTimeout(timerRef.current);
 
   const handleAddSpot = async (e) => {
     e.preventDefault();
-    if (!newSpot.lat || !newSpot.lng) return alert("Введите координаты");
     try {
       await addDoc(collection(db, "hotspots"), {
         ...newSpot,
@@ -82,12 +77,11 @@ function App() {
       });
       setNewSpot({ lat: "", lng: "", label: "", description: "", time: "" });
       setModalOpen(false);
-    } catch (err) { console.error(err); }
+    } catch (err) { alert("Ошибка сохранения"); }
   };
 
   return (
     <div className="App">
-      {/* Секретный квадрат i */}
       <div 
         className="secret-box"
         onMouseDown={handleStart} onMouseUp={handleEnd} 
@@ -95,9 +89,7 @@ function App() {
       >i</div>
 
       <MapContainer className="map-container" center={[55.7558, 37.6173]} zoom={11} zoomControl={false}>
-        <TileLayer 
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        />
+        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
         {hotspots.length > 0 && <HeatmapLayer points={hotspots.map(h => [Number(h.lat), Number(h.lng), 0.8])} />}
         
         {hotspots.map((spot) => (
@@ -122,7 +114,6 @@ function App() {
         {flyTarget && <FlyToSpot target={flyTarget} />}
       </MapContainer>
 
-      {/* Нижняя панель */}
       <div className={`bottom-panel ${isPanelCollapsed ? "collapsed" : ""}`}>
         <div className="panel-handle" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}></div>
         
@@ -150,12 +141,11 @@ function App() {
         </div>
       </div>
 
-      {/* Поиск */}
       {searchOpen && (
         <div className="search-overlay">
           <div className="search-header">
             <button className="close-search" onClick={() => setSearchOpen(false)}>✕</button>
-            <input type="text" placeholder="Поиск места..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+            <input type="text" placeholder="Поиск..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
           </div>
           <div className="search-results-list">
             {hotspots.filter(h => (h.label || "").toLowerCase().includes(query.toLowerCase())).map(spot => (
@@ -178,11 +168,10 @@ function App() {
         </div>
       )}
 
-      {/* Модалка добавления (компактная) */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3 style={{margin: "0 0 5px 0", color: "#ffcc00"}}>Новая точка</h3>
+            <h3 style={{margin: "0 0 10px 0", color: "#ffcc00"}}>Новая точка</h3>
             <input placeholder="Название" onChange={e => setNewSpot({...newSpot, label: e.target.value})} />
             <input placeholder="Описание" onChange={e => setNewSpot({...newSpot, description: e.target.value})} />
             <input placeholder="Время" onChange={e => setNewSpot({...newSpot, time: e.target.value})} />
@@ -190,7 +179,7 @@ function App() {
               <input type="number" step="any" placeholder="Широта" onChange={e => setNewSpot({...newSpot, lat: e.target.value})} />
               <input type="number" step="any" placeholder="Долгота" onChange={e => setNewSpot({...newSpot, lng: e.target.value})} />
             </div>
-            <button className="submit-button" onClick={handleAddSpot}>ДОБАВИТЬ</button>
+            <button className="submit-button" onClick={handleAddSpot}>СОХРАНИТЬ</button>
           </div>
         </div>
       )}

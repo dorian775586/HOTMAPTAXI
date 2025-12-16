@@ -1,104 +1,89 @@
-/* Полный сброс для фулл-скрин карты */
+/* ЖЕСТКИЙ СБРОС */
 html, body, #root {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
+  position: fixed; /* Чтобы не скроллился сам body */
 }
 
 .App {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   position: relative;
-  overflow: hidden;
-  font-family: -apple-system, system-ui, sans-serif;
 }
 
+/* КАРТА НА ВЕСЬ ЭКРАН - ПРИНУДИТЕЛЬНО */
 .map-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
   z-index: 1;
 }
 
-/* Секретный квадрат (полупрозрачный) */
+/* СЕКРЕТНЫЙ КВАДРАТ (маленький и прозрачный) */
 .secret-box {
-  position: absolute;
-  top: env(safe-area-inset-top, 15px);
-  right: 15px;
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(0,0,0,0.1);
-  z-index: 1500;
+  position: fixed;
+  top: env(safe-area-inset-top, 10px);
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: rgba(0,0,0,0.3);
+  color: rgba(0,0,0,0.2);
+  border-radius: 3px;
   cursor: pointer;
-  border-radius: 4px;
-  user-select: none;
 }
 
-/* Панель управления */
+/* ПАНЕЛЬ - ФИКС ХВОСТИКА */
 .bottom-panel {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   background: white;
   z-index: 1000;
   border-radius: 24px 24px 0 0;
-  padding: 10px 20px calc(15px + env(safe-area-inset-bottom));
-  box-shadow: 0 -8px 25px rgba(0,0,0,0.1);
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+  transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
+  will-change: transform;
 }
 
+/* Свернутое состояние: уезжает вниз, оставляя 90px сверху */
 .bottom-panel.collapsed {
-  transform: translateY(calc(100% - 95px)); /* Хвостик для поиска */
+  transform: translateY(calc(100% - 90px));
 }
 
 .panel-handle {
   width: 40px;
   height: 4px;
-  background: #e0e0e0;
+  background: #ddd;
   border-radius: 2px;
-  margin: 5px auto 12px;
-  cursor: pointer;
+  margin: 0 auto 15px;
 }
 
 .search-trigger {
-  background: #f4f4f4;
+  background: #f2f2f2;
   border-radius: 12px;
   padding: 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.search-text { font-size: 16px; font-weight: 500; color: #666; }
+.search-text { font-size: 17px; font-weight: 500; color: #555; }
 
-.panel-label {
-  font-size: 12px;
-  font-weight: 900;
-  color: #222;
-  margin-bottom: 10px;
-  letter-spacing: 0.5px;
-}
+.panel-label { font-size: 12px; font-weight: 900; margin-bottom: 10px; color: #333; }
 
-.hot-scroll {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 5px;
-}
+.hot-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
 .hot-scroll::-webkit-scrollbar { display: none; }
 
 .hot-card {
@@ -106,68 +91,50 @@ html, body, #root {
   background: #f9f9f9;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #eee;
 }
 
 .hot-name { font-weight: 700; font-size: 14px; display: block; }
 .hot-subtext { color: #ff4500; font-size: 11px; font-weight: 600; }
 
-/* Компактная модалка для мобил */
+/* МОДАЛКА (ФИКС РАЗМЕРА) */
 .modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 3000;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 3000;
 }
 .modal {
   background: #1a1a1a;
-  padding: 15px 20px;
-  border-radius: 18px;
-  width: 85%;
+  padding: 20px;
+  border-radius: 20px;
+  width: 80%;
   max-width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
-.modal input {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: none;
-  background: #2a2a2a;
-  color: white;
-  font-size: 14px;
-}
+.modal input { padding: 12px; border-radius: 10px; border: none; background: #333; color: white; }
 .coords-row { display: flex; gap: 8px; }
 .coords-row input { width: 50%; }
-.submit-button {
-  background: #ffcc00;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: 800;
-  margin-top: 5px;
-}
+.submit-button { background: #ffcc00; border: none; padding: 15px; border-radius: 12px; font-weight: bold; }
 
-/* Попап маркера */
-.custom-popup { min-width: 150px; }
-.popup-header { font-weight: 800; font-size: 16px; }
-.popup-time { color: #ff4500; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+/* ПОПАПЫ */
+.custom-popup { min-width: 140px; }
+.popup-header { font-weight: 800; font-size: 16px; margin-bottom: 2px; }
+.popup-time { color: #ff4500; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
 .popup-desc { font-size: 13px; color: #555; border-top: 1px solid #eee; padding-top: 5px; }
-.go-button {
-  background: #ffcc00; border: none; padding: 10px; border-radius: 8px;
-  font-weight: bold; width: 100%; margin-top: 8px;
-}
+.go-button { background: #ffcc00; border: none; padding: 10px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 10px; }
 
-/* Поиск и результаты */
-.search-overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: white; z-index: 2000; padding: 15px;
-}
+/* ПОИСК */
+.search-overlay { position: fixed; inset: 0; background: white; z-index: 2500; padding: 15px; }
 .search-header { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
-.close-search { width: 35px; height: 35px; border-radius: 50%; border: none; background: #f0f0f0; }
-.res-details { border-top: 1px solid #eee; margin-top: 4px; padding-top: 4px; }
+.close-search { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f0f0f0; }
+.res-details { border-top: 1px solid #f0f0f0; margin-top: 5px; padding-top: 5px; }
 .res-time { color: #ff4500; font-weight: bold; font-size: 11px; }
-.res-addr { margin: 0; font-size: 13px; color: #666; }
+.res-addr { margin: 0; font-size: 13px; color: #777; }
 
-/* Маркер пульс */
+/* МАРКЕР */
 .pulse-marker { display: flex; justify-content: center; align-items: center; }
 .fire-emoji { font-size: 26px; z-index: 2; position: relative; }
 .pulse-marker::before {
