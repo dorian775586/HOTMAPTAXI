@@ -1,183 +1,180 @@
-/* ========== ОСНОВНОЙ КОНТЕЙНЕР ========== */
+/* ========== ОБЩИЕ ========== */
 .App {
   width: 100vw;
   height: 100vh;
   position: relative;
   overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .map-container {
   width: 100%;
   height: 100%;
+  z-index: 1;
 }
 
-/* ========== КНОПКИ ========== */
-.add-button {
+/* ========== НИЖНЯЯ ПАНЕЛЬ ========== */
+.bottom-panel {
   position: absolute;
-  top: 20px;
-  left: 20px;
-  background-color: #ffcc00;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
-  color: black;
-}
-
-.search-toggle {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #ffffff;
-  border: none;
-  padding: 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
-}
-
-/* ========== ПОИСК ========== */
-.search-box {
-  position: absolute;
-  top: 70px;
-  right: 20px;
-  background: #fff;
-  padding: 10px;
-  border-radius: 12px;
-  width: 230px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-  z-index: 1000;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-.search-results {
-  max-height: 160px;
-  overflow-y: auto;
-  margin-top: 8px;
-}
-
-.search-item {
-  padding: 8px;
-  cursor: pointer;
-  border-radius: 6px;
-  color: #333;
-}
-
-.search-item:hover {
-  background-color: #f0f0f0;
-}
-
-/* ========== МОДАЛЬНОЕ ОКНО ========== */
-.modal-overlay {
-  position: fixed;
-  top: 0;
+  bottom: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
+  right: 0;
+  background: white;
+  z-index: 1000;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 20px 30px;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
 }
 
-.modal {
-  background-color: #1e1e1e;
-  padding: 25px;
-  border-radius: 18px;
-  color: white;
-  width: 320px;
+.panel-handle {
+  width: 40px;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  margin: 0 auto 15px;
+}
+
+.search-trigger {
+  background: #f2f2f2;
+  border-radius: 14px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.search-icon { font-size: 20px; }
+.search-text { font-size: 18px; font-weight: 500; color: #555; }
+
+.panel-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* СКРОЛЛ КАРТОЧЕК */
+.hot-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 5px;
+  scrollbar-width: none; /* Firefox */
+}
+.hot-scroll::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.hot-card {
+  min-width: 160px;
+  background: #f8f8f8;
+  padding: 12px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.hot-card:active { transform: scale(0.95); }
+
+.hot-emoji { font-size: 24px; }
+.hot-info { display: flex; flex-direction: column; }
+.hot-name { font-weight: 600; font-size: 14px; color: #333; }
+.hot-subtext { font-size: 12px; color: #888; }
+
+/* КНОПКИ ВНИЗУ */
+.panel-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 25px;
+}
+.action-btn {
+  flex: 1;
+  padding: 16px;
+  border-radius: 14px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.add-btn { background: #f0f0f0; color: #333; }
+.main-btn { background: #ffcc00; color: black; }
+
+/* ========== ПОЛНОЭКРАННЫЙ ПОИСК ========== */
+.search-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: white;
+  z-index: 2000;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
-
-.modal h2 { margin: 0 0 10px 0; text-align: center; }
-
-.modal input {
+.search-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.close-search {
+  background: none; border: none; font-size: 24px; cursor: pointer;
+}
+.search-header input {
+  flex: 1;
   padding: 12px;
-  border-radius: 8px;
-  border: none;
-  background: #2b2b2b;
-  color: white;
-  outline: none;
-}
-
-.submit-button {
-  background-color: #ffcc00;
-  border: none;
-  padding: 14px;
   border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  color: black;
-  margin-top: 10px;
+  border: 1px solid #eee;
+  background: #f5f5f5;
+  font-size: 16px;
 }
-
-/* ========== ПОП-АП (ПОЕХАЛИ!) ========== */
-.go-button {
-  padding: 10px;
-  background: #ffcc00;
-  border-radius: 8px;
-  font-weight: bold;
-  border: none;
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #f5f5f5;
   cursor: pointer;
-  margin-top: 8px;
-  width: 100%;
-  color: black;
 }
+.res-title { font-weight: 600; display: block; }
+.res-addr { font-size: 13px; color: #888; }
 
-/* ========== ЧИСТЫЙ ОГНЕННЫЙ ПУЛЬС 🔥 ========== */
+/* ТВОЙ ОГНЕННЫЙ ПУЛЬС */
 .pulse-marker {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 26px;
-  position: relative;
-  border: none !important;
-  background: none !important;
 }
+.fire-emoji { font-size: 28px; z-index: 2; position: relative; }
 
-/* Пульс строго оранжевого цвета */
 .pulse-marker::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 12px;
-  height: 12px;
-  background: #ff4500; /* OrangeRed */
+  width: 10px; height: 10px;
+  background: #ff4500;
   border-radius: 50%;
-  z-index: -1;
   animation: fire-pulse 2s infinite;
 }
 
 @keyframes fire-pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-    box-shadow: 0 0 8px 2px #ff8c00;
-  }
-  70% {
-    transform: translate(-50%, -50%) scale(3.5);
-    opacity: 0;
-    box-shadow: 0 0 15px 10px rgba(255, 69, 0, 0);
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0;
-  }
+  0% { transform: scale(1); opacity: 1; box-shadow: 0 0 5px #ff8c00; }
+  70% { transform: scale(4); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
 }
+
+/* МОДАЛКА (СТАРАЯ) */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 3000;
+}
+.modal {
+  background: #1e1e1e; padding: 25px; border-radius: 20px;
+  width: 300px; display: flex; flex-direction: column; gap: 10px;
+}
+.modal input { padding: 12px; border-radius: 10px; border: none; background: #333; color: white; }
+.submit-button { background: #ffcc00; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
