@@ -1,80 +1,175 @@
-.App { width: 100vw; height: 100vh; position: relative; overflow: hidden; font-family: -apple-system, sans-serif; }
-.map-container { width: 100%; height: 100%; z-index: 1; }
-
-/* КНОПКА ИНФО (Квадратная, полупрозрачная) */
-.secret-box {
-  position: absolute; top: 15px; right: 15px;
-  width: 24px; height: 24px;
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(0,0,0,0.1);
-  z-index: 1500; display: flex; align-items: center; justify-content: center;
-  font-size: 10px; color: rgba(0,0,0,0.3); font-weight: bold;
-  cursor: pointer; border-radius: 4px; user-select: none;
+/* Полный сброс для фулл-скрин карты */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* НИЖНЯЯ ПАНЕЛЬ */
+.App {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Секретный квадрат (полупрозрачный) */
+.secret-box {
+  position: absolute;
+  top: env(safe-area-inset-top, 15px);
+  right: 15px;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0,0,0,0.1);
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: rgba(0,0,0,0.3);
+  cursor: pointer;
+  border-radius: 4px;
+  user-select: none;
+}
+
+/* Панель управления */
 .bottom-panel {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: white; z-index: 1000; border-radius: 24px 24px 0 0;
-  padding: 10px 20px 25px; box-shadow: 0 -8px 25px rgba(0,0,0,0.1);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  z-index: 1000;
+  border-radius: 24px 24px 0 0;
+  padding: 10px 20px calc(15px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 25px rgba(0,0,0,0.1);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.bottom-panel.collapsed { transform: translateY(calc(100% - 95px)); }
-.panel-handle { width: 40px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 12px; cursor: pointer; }
+
+.bottom-panel.collapsed {
+  transform: translateY(calc(100% - 95px)); /* Хвостик для поиска */
+}
+
+.panel-handle {
+  width: 40px;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  margin: 5px auto 12px;
+  cursor: pointer;
+}
 
 .search-trigger {
-  background: #f4f4f4; border-radius: 12px; padding: 14px;
-  display: flex; align-items: center; gap: 10px; margin-bottom: 15px;
+  background: #f4f4f4;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
 }
+
 .search-text { font-size: 16px; font-weight: 500; color: #666; }
 
-.panel-label { font-size: 12px; font-weight: 900; color: #222; margin-bottom: 10px; }
-.hot-scroll { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
+.panel-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #222;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.hot-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 5px;
+}
 .hot-scroll::-webkit-scrollbar { display: none; }
-.hot-card { min-width: 130px; background: #f9f9f9; padding: 12px; border-radius: 14px; border: 1px solid #f0f0f0; }
+
+.hot-card {
+  min-width: 130px;
+  background: #f9f9f9;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #f0f0f0;
+}
+
 .hot-name { font-weight: 700; font-size: 14px; display: block; }
 .hot-subtext { color: #ff4500; font-size: 11px; font-weight: 600; }
 
-/* МОДАЛКА (Фикс для мобил) */
+/* Компактная модалка для мобил */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 3000;
 }
 .modal {
-  background: #1a1a1a; padding: 20px; border-radius: 18px; width: 85%; max-width: 300px;
-  display: flex; flex-direction: column; gap: 8px; color: white;
+  background: #1a1a1a;
+  padding: 15px 20px;
+  border-radius: 18px;
+  width: 85%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-.modal input { 
-  padding: 12px; border-radius: 8px; border: none; background: #2a2a2a; color: white; font-size: 14px; 
+.modal input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #2a2a2a;
+  color: white;
+  font-size: 14px;
 }
 .coords-row { display: flex; gap: 8px; }
 .coords-row input { width: 50%; }
-.submit-button { 
-  background: #ffcc00; border: none; padding: 14px; border-radius: 10px; 
-  font-weight: 800; color: black; margin-top: 5px; font-size: 14px;
+.submit-button {
+  background: #ffcc00;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 800;
+  margin-top: 5px;
 }
 
-/* ПОПАП */
+/* Попап маркера */
 .custom-popup { min-width: 150px; }
-.popup-header { font-weight: 800; font-size: 16px; margin-bottom: 2px; }
+.popup-header { font-weight: 800; font-size: 16px; }
 .popup-time { color: #ff4500; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
-.popup-desc { font-size: 13px; color: #555; border-top: 1px solid #eee; padding-top: 5px; line-height: 1.3; }
+.popup-desc { font-size: 13px; color: #555; border-top: 1px solid #eee; padding-top: 5px; }
 .go-button {
   background: #ffcc00; border: none; padding: 10px; border-radius: 8px;
-  font-weight: bold; width: 100%; margin-top: 8px; cursor: pointer;
+  font-weight: bold; width: 100%; margin-top: 8px;
 }
 
-/* ПОИСК */
-.search-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 2000; padding: 15px; }
+/* Поиск и результаты */
+.search-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: white; z-index: 2000; padding: 15px;
+}
 .search-header { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
 .close-search { width: 35px; height: 35px; border-radius: 50%; border: none; background: #f0f0f0; }
 .res-details { border-top: 1px solid #eee; margin-top: 4px; padding-top: 4px; }
 .res-time { color: #ff4500; font-weight: bold; font-size: 11px; }
 .res-addr { margin: 0; font-size: 13px; color: #666; }
 
-/* МАРКЕР */
+/* Маркер пульс */
 .pulse-marker { display: flex; justify-content: center; align-items: center; }
-.fire-emoji { font-size: 26px; z-index: 2; }
+.fire-emoji { font-size: 26px; z-index: 2; position: relative; }
 .pulse-marker::before {
   content: ''; position: absolute; width: 8px; height: 8px;
   background: #ff4500; border-radius: 50%; animation: fire-pulse 2s infinite;
