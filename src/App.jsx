@@ -49,7 +49,6 @@ function App() {
     return () => unsub();
   }, []);
 
-  // Автоматическое открытие попапа при полете к точке
   useEffect(() => {
     if (flyTarget && flyTarget.id && markerRefs.current[flyTarget.id]) {
       setTimeout(() => {
@@ -113,19 +112,22 @@ function App() {
       <div className={`bottom-panel ${isPanelCollapsed ? "collapsed" : ""}`}>
         <div className="panel-handle" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}></div>
         
-        <div className="search-trigger" onClick={() => { setSearchOpen(true); setIsPanelCollapsed(false); }}>
+        <div className="search-trigger" onClick={() => { 
+          if(isPanelCollapsed) setIsPanelCollapsed(false);
+          else setSearchOpen(true);
+        }}>
           <span className="search-icon">🔍</span>
           <span className="search-text">Куда едем?</span>
         </div>
 
         <div className="panel-content">
           <div className="quick-access">
-            <p className="panel-label">Рекомендуемые места</p>
+            <p className="panel-label">РЕКОМЕНДУЕМЫЕ МЕСТА 🔥</p>
             <div className="hot-scroll">
               {hotspots.slice(0, 5).map((spot) => (
                 <div key={spot.id} className="hot-card" onClick={() => {
-                  setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 15 });
-                  setIsPanelCollapsed(true); // Сворачиваем панель при клике
+                  setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 14 });
+                  setIsPanelCollapsed(true);
                 }}>
                   <div className="hot-emoji">🔥</div>
                   <div className="hot-info">
@@ -140,7 +142,7 @@ function App() {
           <div className="panel-actions">
             <button className="action-btn add-btn" onClick={() => setModalOpen(true)}>Добавить точку</button>
             <button className="action-btn main-btn" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}>
-                {isPanelCollapsed ? "ОТКРЫТЬ МЕНЮ" : "ПОГНАЛИ!"}
+                {isPanelCollapsed ? "РАЗВЕРНУТЬ" : "ПОГНАЛИ!"}
             </button>
           </div>
         </div>
@@ -155,9 +157,9 @@ function App() {
           <div className="search-results-list">
             {hotspots.filter(h => (h.label || "").toLowerCase().includes(query.toLowerCase())).map(spot => (
               <div key={spot.id} className="result-item" onClick={() => {
-                setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 16 });
+                setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 15 });
                 setSearchOpen(false);
-                setIsPanelCollapsed(true); // Сворачиваем после поиска
+                setIsPanelCollapsed(true);
               }}>
                 <span className="res-emoji">🔥</span>
                 <div className="res-content">
@@ -176,7 +178,7 @@ function App() {
             <h2>Новое событие</h2>
             <input name="label" placeholder="Название" onChange={handleInputChange} />
             <input name="description" placeholder="Описание" onChange={handleInputChange} />
-            <input name="time" placeholder="Время (например, 20:00)" onChange={handleInputChange} />
+            <input name="time" placeholder="Время" onChange={handleInputChange} />
             <input name="lat" type="number" step="any" placeholder="Широта" onChange={handleInputChange} />
             <input name="lng" type="number" step="any" placeholder="Долгота" onChange={handleInputChange} />
             <button className="submit-button" onClick={handleAddSpot}>Добавить</button>
