@@ -7,7 +7,7 @@ import { collection, onSnapshot, addDoc } from "firebase/firestore";
 import HeatmapLayer from "./HeatmapLayer";
 import "./App.css";
 
-// Фикс иконок Leaflet
+// Фикс иконок Leaflet для корректного отображения маркеров
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import shadowUrl from "leaflet/dist/images/marker-shadow.png";
@@ -15,7 +15,7 @@ import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-/* ПЛАВНЫЙ ПЕРЕЛЁТ */
+/* ПЛАВНЫЙ ПЕРЕЛЁТ К ТОЧКЕ */
 const FlyToSpot = ({ target }) => {
   const map = useMap();
   useEffect(() => {
@@ -35,6 +35,7 @@ function App() {
   const [flyTarget, setFlyTarget] = useState(null);
   const markerRefs = useRef({});
 
+  // Стильная иконка огонька
   const pulseIcon = new L.DivIcon({
     className: "pulse-marker",
     html: `<div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">🔥</div>`,
@@ -43,7 +44,7 @@ function App() {
   });
 
   useEffect(() => {
-    // Подписываемся на данные
+    // Подписываемся на коллекцию hotspots в реальном времени
     const unsub = onSnapshot(collection(db, "hotspots"), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log("Данные из БД обновлены, количество:", data.length);
@@ -81,19 +82,20 @@ function App() {
     window.open(url, "_blank");
   };
 
-  // Важно: принудительно превращаем координаты в числа для теплового слоя
+  // Подготовка данных для теплового слоя с гарантией числового формата
   const validHeatmapPoints = hotspots
     .filter(h => h.lat && h.lng)
     .map(h => [Number(h.lat), Number(h.lng), 0.8]);
 
   return (
     <div className="App">
-      {/* Счетчик для проверки связи на продакшене */}
+      {/* Счетчик для быстрой проверки связи с базой */}
       <div style={{
         position: 'absolute', top: 70, left: 20, zIndex: 1000, 
-        background: 'white', padding: '5px 10px', borderRadius: '8px', fontSize: '12px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+        background: 'rgba(255,255,255,0.9)', padding: '5px 12px', borderRadius: '20px', 
+        fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
-        Точек в базе: {hotspots.length}
+        🔥 Точек в базе: {hotspots.length}
       </div>
 
       <button className="add-button" onClick={() => setModalOpen(true)}>Добавить точку</button>
@@ -103,7 +105,7 @@ function App() {
         <div className="search-box">
           <input 
             type="text" 
-            placeholder="Поиск..." 
+            placeholder="Поиск места..." 
             value={query} 
             onChange={e => setQuery(e.target.value)} 
             autoFocus 
@@ -117,7 +119,7 @@ function App() {
                   setSearchOpen(false);
                   setQuery("");
                 }}>
-                  {spot.label || "Без названия"}
+                  {spot.label || "Событие без названия"}
                 </div>
               ))}
           </div>
@@ -128,25 +130,34 @@ function App() {
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Новое событие</h2>
-            <input name="label" placeholder="Название" value={newSpot.label} onChange={handleInputChange} />
+            <input name="label" placeholder="Название (например, Центр)" value={newSpot.label} onChange={handleInputChange} />
             <input name="description" placeholder="Описание" value={newSpot.description} onChange={handleInputChange} />
-            <input name="time" placeholder="Время" value={newSpot.time} onChange={handleInputChange} />
-            <input name="lat" type="number" step="any" placeholder="Широта" value={newSpot.lat} onChange={handleInputChange} />
-            <input name="lng" type="number" step="any" placeholder="Долгота" value={newSpot.lng} onChange={handleInputChange} />
-            <button className="submit-button" onClick={handleAddSpot}>Добавить</button>
+            <input name="time" placeholder="Время (например, сейчас)" value={newSpot.time} onChange={handleInputChange} />
+            <input name="lat" type="number" step="any" placeholder="Широта (55.75)" value={newSpot.lat} onChange={handleInputChange} />
+            <input name="lng" type="number" step="any" placeholder="Долгота (37.61)" value={newSpot.lng} onChange={handleInputChange} />
+            <button className="submit-button" onClick={handleAddSpot}>Добавить на карту</button>
           </div>
         </div>
       )}
 
-      <MapContainer className="map-container" center={[55.75, 37.61]} zoom={11}>
-        {/* КАРТА НА РУССКОМ (OSM Standard) */}
-        <TileLayer 
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
-          attribution='&copy; OpenStreetMap contributors'
+      <MapContainer className="map-container" center={[55.7558, 37.6173]} zoom={11}>
+        
+        {/* СЛОЙ 1: Стильный дизайн Voyager без подписей */}
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OpenStreetMap, &copy; CARTO'
         />
 
+        {/* СЛОЙ 2: Только русские названия поверх карты */}
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OpenStreetMap, &copy; CARTO'
+        />
+
+        {/* ТЕПЛОВАЯ КАРТА */}
         {validHeatmapPoints.length > 0 && <HeatmapLayer points={validHeatmapPoints} />}
 
+        {/* МАРКЕРЫ-ОГОНЬКИ */}
         {hotspots.map((spot) => (
           <Marker
             key={spot.id}
@@ -156,12 +167,18 @@ function App() {
             eventHandlers={{ click: () => setFlyTarget({ id: spot.id, position: [Number(spot.lat), Number(spot.lng)], zoom: 16 }) }}
           >
             <Popup>
-              <strong>{spot.label || "Событие"}</strong><br />
-              {spot.description}<br />
-              {spot.time}<br />
-              <button className="go-button" onClick={() => openYandexNavigator(spot.lat, spot.lng)}>
-                Поехали!
-              </button>
+              <div style={{ textAlign: 'center' }}>
+                <strong style={{ fontSize: '16px' }}>{spot.label || "Событие"}</strong><br />
+                <span style={{ color: '#666' }}>{spot.description}</span><br />
+                <small>{spot.time}</small><br />
+                <button 
+                  className="go-button" 
+                  style={{ marginTop: '10px', background: '#ffcc00', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer' }}
+                  onClick={() => openYandexNavigator(spot.lat, spot.lng)}
+                >
+                  🚀 Поехали!
+                </button>
+              </div>
             </Popup>
           </Marker>
         ))}
