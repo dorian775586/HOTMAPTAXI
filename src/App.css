@@ -82,21 +82,54 @@ html, body, #root {
 
 .search-text { font-size: 17px; font-weight: 500; color: #444; }
 
-.panel-label { font-size: 13px; font-weight: 800; margin-bottom: 12px; color: #111; letter-spacing: 0.3px; }
+.panel-label { 
+  font-size: 13px; 
+  font-weight: 800; 
+  margin-bottom: 12px; 
+  color: #111; 
+  letter-spacing: 0.3px; 
+}
 
-.hot-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
+/* --- ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ КАРТОЧЕК --- */
+.hot-scroll { 
+  display: flex; 
+  gap: 12px; 
+  overflow-x: auto; 
+  scrollbar-width: none; 
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 5px;
+}
 .hot-scroll::-webkit-scrollbar { display: none; }
 
 .hot-card {
-  min-width: 135px;
+  flex: 0 0 145px; /* Карточки не сжимаются */
   background: #f8f8f9;
   padding: 14px;
   border-radius: 18px;
   border: 1px solid #f0f0f1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 70px;
 }
 
-.hot-name { font-weight: 700; font-size: 14px; color: #000; display: block; }
-.hot-subtext { color: #ff4500; font-size: 11px; font-weight: 700; margin-top: 2px; display: block; }
+.hot-name { 
+  font-weight: 700; 
+  font-size: 13px; 
+  color: #000; 
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hot-subtext { 
+  color: #ff4500; 
+  font-size: 11px; 
+  font-weight: 700; 
+  margin-top: 4px; 
+}
 
 /* Поиск */
 .search-overlay {
@@ -161,7 +194,6 @@ html, body, #root {
   margin-top: 12px;
   cursor: pointer;
   color: #000 !important;
-  /* Фикс совместимости */
   appearance: none;
   -webkit-appearance: none;
 }
@@ -215,7 +247,7 @@ html, body, #root {
   -webkit-appearance: none;
 }
 
-/* Маркер */
+/* Маркер Огня */
 .pulse-marker { display: flex; justify-content: center; align-items: center; }
 .fire-emoji { font-size: 26px; z-index: 2; position: relative; }
 .pulse-marker::before {
@@ -223,3 +255,11 @@ html, body, #root {
   background: #ff4500; border-radius: 50%; animation: fire-pulse 2s infinite;
 }
 @keyframes fire-pulse { 0% { transform: scale(1); opacity: 1; } 70% { transform: scale(4); opacity: 0; } 100% { opacity: 0; } }
+
+/* Синяя точка (Пользователь) */
+.user-location-icon {
+  background: #2196F3;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+}

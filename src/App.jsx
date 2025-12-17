@@ -15,7 +15,6 @@ import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-// --- КОНСТАНТЫ И НАСТРОЙКИ ---
 const BOT_API_URL = "https://taxibot-uha5.onrender.com/api/points";
 
 const cityCoords = {
@@ -24,11 +23,35 @@ const cityCoords = {
   "Казань": [55.7887, 49.1221]
 };
 
+// Компонент определения СЕБЯ на карте
+const UserLocation = () => {
+  const [position, setPosition] = useState(null);
+  const map = useMap();
+
+  useEffect(() => {
+    map.locate({ setView: false, watch: true }).on("locationfound", (e) => {
+      setPosition(e.latlng);
+    });
+  }, [map]);
+
+  const userIcon = new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+
+  return position === null ? null : (
+    <Marker position={position} icon={userIcon}>
+      <Popup>Вы здесь</Popup>
+    </Marker>
+  );
+};
+
 const FlyToSpot = ({ target }) => {
   const map = useMap();
   useEffect(() => {
     if (target) {
-      map.flyTo(target.position, target.zoom, { duration: 1.2, easeLinearity: 0.25 });
+      map.flyTo(target.position, target.zoom, { duration: 1.2 });
     }
   }, [target, map]);
   return null;
@@ -45,12 +68,10 @@ function App() {
   const markerRefs = useRef({});
   const timerRef = useRef(null);
 
-  // Получаем город из параметров URL
   const urlParams = new URLSearchParams(window.location.search);
   const userCity = urlParams.get('city') || "Москва";
   const defaultCenter = cityCoords[userCity] || cityCoords["Москва"];
 
-  // --- ИНТЕГРАЦИЯ TELEGRAM WEB APP ---
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
       const tg = window.Telegram.WebApp;
@@ -67,22 +88,15 @@ function App() {
     iconAnchor: [15, 15],
   });
 
-  // --- ЗАГРУЗКА ДАННЫХ (FIREBASE + BOT API) ---
   useEffect(() => {
-    console.log("🚀 Запуск загрузки для города:", userCity);
-
-    // 1. Подписка на Firebase (ручные точки)
     const unsubFirebase = onSnapshot(collection(db, "hotspots"), (snapshot) => {
       const firebaseData = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data(), source: 'manual' }))
         .filter(item => item.city === userCity || !item.city);
 
-      // 2. Запрос к API бота (авто-точки)
       fetch(`${BOT_API_URL}?city=${encodeURIComponent(userCity)}`)
         .then(res => res.json())
         .then(botData => {
-          console.log("✅ Данные от бота получены:", botData);
-          
           const formattedBotData = botData.map(event => ({
             id: event._id,
             lat: Number(event.lat), 
@@ -92,27 +106,14 @@ function App() {
             time: dayjs(event.expireAt).format("HH:mm"),
             source: 'auto'
           }));
-
-          // Объединяем списки
           setHotspots([...firebaseData, ...formattedBotData]);
         })
-        .catch(err => {
-          console.error("❌ Ошибка API бота:", err);
-          setHotspots(firebaseData);
-        });
+        .catch(err => setHotspots(firebaseData));
     });
-
     return () => unsubFirebase();
   }, [userCity]);
 
-  useEffect(() => {
-    if (flyTarget && flyTarget.id && markerRefs.current[flyTarget.id]) {
-      setTimeout(() => {
-        markerRefs.current[flyTarget.id].openPopup();
-      }, 1300);
-    }
-  }, [flyTarget]);
-
+  // Остальная логика без изменений (handleStart, handleAddSpot и т.д.)
   const handleStart = () => {
     timerRef.current = setTimeout(() => {
       setModalOpen(true);
@@ -140,9 +141,8 @@ function App() {
     <div className="App">
       <MapContainer className="map-container" center={defaultCenter} zoom={11} zoomControl={false}>
         <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-        
+        <UserLocation />
         {hotspots.length > 0 && <HeatmapLayer points={hotspots.map(h => [Number(h.lat), Number(h.lng), 0.8])} />}
-        
         {hotspots.map((spot) => (
           <Marker
             key={spot.id}
@@ -169,12 +169,10 @@ function App() {
 
       <div className={`bottom-panel ${isPanelCollapsed ? "collapsed" : ""}`}>
         <div className="panel-handle" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}></div>
-        
         <div className="search-trigger" onClick={() => isPanelCollapsed ? setIsPanelCollapsed(false) : setSearchOpen(true)}>
           <span className="search-icon">🔍</span>
           <span className="search-text">Куда едем в г. {userCity}?</span>
         </div>
-
         <div className="panel-content">
           <p className="panel-label">АКТУАЛЬНЫЕ ТОЧКИ 🔥</p>
           <div className="hot-scroll">
@@ -193,7 +191,8 @@ function App() {
           </div>
         </div>
       </div>
-
+      
+      {/* Search Overlay & Modal - оставить как было */}
       {searchOpen && (
         <div className="search-overlay">
           <div className="search-header">
@@ -209,9 +208,7 @@ function App() {
               }}>
                 <span className="res-emoji">📍</span>
                 <div className="res-content">
-                  <div className="res-row-main">
-                    <span className="res-title">{spot.label}</span>
-                  </div>
+                  <div className="res-row-main"><span className="res-title">{spot.label}</span></div>
                   <p className="res-addr">{spot.description}</p>
                 </div>
               </div>
