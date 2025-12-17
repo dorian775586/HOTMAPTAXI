@@ -1,4 +1,3 @@
-/* Полный сброс для исключения обрезанных краев */
 html, body, #root {
   margin: 0;
   padding: 0;
@@ -16,7 +15,6 @@ html, body, #root {
   font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Карта - жестко на весь экран */
 .map-container {
   position: absolute !important;
   top: 0 !important;
@@ -26,7 +24,31 @@ html, body, #root {
   z-index: 1;
 }
 
-/* Секретный квадрат */
+/* Кнопка "Найти меня" (как в Яндексе) */
+.locate-me-btn {
+  position: fixed;
+  right: 15px;
+  bottom: 120px; /* Над нижней панелью */
+  width: 46px;
+  height: 46px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  z-index: 1500;
+  cursor: pointer;
+  border: none;
+  font-size: 22px;
+  transition: transform 0.1s;
+}
+
+.locate-me-btn:active {
+  transform: scale(0.92);
+  background: #f0f0f0;
+}
+
 .secret-box {
   position: fixed;
   top: env(safe-area-inset-top, 10px);
@@ -41,10 +63,8 @@ html, body, #root {
   font-size: 11px;
   color: rgba(0,0,0,0.1);
   border-radius: 4px;
-  cursor: pointer;
 }
 
-/* Панель - хвостик 95px */
 .bottom-panel {
   position: fixed;
   bottom: 0;
@@ -82,15 +102,8 @@ html, body, #root {
 
 .search-text { font-size: 17px; font-weight: 500; color: #444; }
 
-.panel-label { 
-  font-size: 13px; 
-  font-weight: 800; 
-  margin-bottom: 12px; 
-  color: #111; 
-  letter-spacing: 0.3px; 
-}
+.panel-label { font-size: 13px; font-weight: 800; margin-bottom: 12px; color: #111; letter-spacing: 0.3px; }
 
-/* --- ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ КАРТОЧЕК --- */
 .hot-scroll { 
   display: flex; 
   gap: 12px; 
@@ -102,7 +115,7 @@ html, body, #root {
 .hot-scroll::-webkit-scrollbar { display: none; }
 
 .hot-card {
-  flex: 0 0 145px; /* Карточки не сжимаются */
+  flex: 0 0 145px;
   background: #f8f8f9;
   padding: 14px;
   border-radius: 18px;
@@ -120,18 +133,13 @@ html, body, #root {
   line-height: 1.2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2; /* Стандартная версия */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.hot-subtext { 
-  color: #ff4500; 
-  font-size: 11px; 
-  font-weight: 700; 
-  margin-top: 4px; 
-}
+.hot-subtext { color: #ff4500; font-size: 11px; font-weight: 700; margin-top: 4px; }
 
-/* Поиск */
 .search-overlay {
   position: fixed;
   inset: 0;
@@ -142,112 +150,30 @@ html, body, #root {
   flex-direction: column;
 }
 
-.search-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.search-header input {
-  flex: 1;
-  border: none;
-  background: #f1f1f2;
-  padding: 16px 20px;
-  border-radius: 14px;
-  font-size: 18px;
-  outline: none;
-  font-weight: 500;
-}
-
+.search-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+.search-header input { flex: 1; border: none; background: #f1f1f2; padding: 16px 20px; border-radius: 14px; font-size: 18px; outline: none; font-weight: 500; }
 .close-search { background: none; border: none; font-size: 22px; color: #999; cursor: pointer; padding: 5px; }
 
 .search-results-list { flex: 1; overflow-y: auto; }
-
-.result-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  padding: 18px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
+.result-item { display: flex; align-items: flex-start; gap: 15px; padding: 18px 0; border-bottom: 1px solid #f0f0f0; }
 .res-content { flex: 1; }
 .res-row-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .res-title { font-weight: 700; font-size: 16px; color: #111; }
-.res-time-badge { font-size: 11px; font-weight: 800; color: #ff4500; text-transform: uppercase; }
 .res-addr { margin: 0; font-size: 13px; color: #777; line-height: 1.4; }
 
-/* Попапы и Кнопки */
 .custom-popup { min-width: 160px; padding: 5px 0; }
 .popup-header { font-weight: 800; font-size: 17px; color: #000; }
 .popup-time { color: #ff4500; font-weight: 700; font-size: 13px; margin: 4px 0 6px; }
 .popup-desc { font-size: 13px; color: #444; border-top: 1px solid #f0f0f0; padding-top: 8px; line-height: 1.4; }
 
-.go-button {
-  background: #ffcc00;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: 800;
-  width: 100%;
-  margin-top: 12px;
-  cursor: pointer;
-  color: #000 !important;
-  appearance: none;
-  -webkit-appearance: none;
-}
+.go-button { background: #ffcc00; border: none; padding: 12px; border-radius: 10px; font-weight: 800; width: 100%; margin-top: 12px; color: #000 !important; -webkit-appearance: none; }
 
-/* Модалка */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-}
-
-.modal {
-  background: #111;
-  padding: 25px;
-  border-radius: 24px;
-  width: 85%;
-  max-width: 320px;
-  color: white;
-  box-sizing: border-box;
-}
-
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 3000; }
+.modal { background: #111; padding: 25px; border-radius: 24px; width: 85%; max-width: 320px; color: white; box-sizing: border-box; }
 .modal-title { margin: 0 0 15px 0; font-size: 18px; font-weight: 800; text-align: center; }
+.modal input { padding: 14px; border-radius: 12px; border: none; background: #222; color: white; margin-bottom: 8px; width: 100%; box-sizing: border-box; font-size: 14px; }
+.submit-button { background: #ffcc00; border: none; padding: 16px; border-radius: 14px; font-weight: 800; width: 100%; margin-top: 10px; color: #000; -webkit-appearance: none; }
 
-.modal input {
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  background: #222;
-  color: white;
-  margin-bottom: 8px;
-  width: 100%;
-  box-sizing: border-box;
-  font-size: 14px;
-}
-
-.submit-button {
-  background: #ffcc00;
-  border: none;
-  padding: 16px;
-  border-radius: 14px;
-  font-weight: 800;
-  width: 100%;
-  margin-top: 10px;
-  color: #000;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-/* Маркер Огня */
 .pulse-marker { display: flex; justify-content: center; align-items: center; }
 .fire-emoji { font-size: 26px; z-index: 2; position: relative; }
 .pulse-marker::before {
@@ -256,7 +182,7 @@ html, body, #root {
 }
 @keyframes fire-pulse { 0% { transform: scale(1); opacity: 1; } 70% { transform: scale(4); opacity: 0; } 100% { opacity: 0; } }
 
-/* Синяя точка (Пользователь) */
+/* Синяя точка местоположения */
 .user-location-icon {
   background: #2196F3;
   border: 3px solid white;

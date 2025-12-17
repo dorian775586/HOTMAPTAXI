@@ -24,27 +24,22 @@ const cityCoords = {
 };
 
 // Компонент определения СЕБЯ на карте
-const UserLocation = () => {
-  const [position, setPosition] = useState(null);
+const UserLocation = ({ setUserPos }) => {
   const map = useMap();
 
   useEffect(() => {
     map.locate({ setView: false, watch: true }).on("locationfound", (e) => {
-      setPosition(e.latlng);
+      setUserPos(e.latlng); // Передаем координаты в главный компонент
     });
-  }, [map]);
+  }, [map, setUserPos]);
 
-  const userIcon = new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+  const userIcon = new L.DivIcon({
+    className: "user-location-icon",
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
   });
 
-  return position === null ? null : (
-    <Marker position={position} icon={userIcon}>
-      <Popup>Вы здесь</Popup>
-    </Marker>
-  );
+  return null; // Рисуем маркер отдельно в основном рендере, если нужно, или используем объект Leaflet
 };
 
 const FlyToSpot = ({ target }) => {
@@ -59,6 +54,7 @@ const FlyToSpot = ({ target }) => {
 
 function App() {
   const [hotspots, setHotspots] = useState([]);
+  const [userPos, setUserPos] = useState(null); // Состояние для кнопки "Найти меня"
   const [modalOpen, setModalOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
@@ -113,7 +109,6 @@ function App() {
     return () => unsubFirebase();
   }, [userCity]);
 
-  // Остальная логика без изменений (handleStart, handleAddSpot и т.д.)
   const handleStart = () => {
     timerRef.current = setTimeout(() => {
       setModalOpen(true);
@@ -141,8 +136,18 @@ function App() {
     <div className="App">
       <MapContainer className="map-container" center={defaultCenter} zoom={11} zoomControl={false}>
         <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-        <UserLocation />
+        
+        <UserLocation setUserPos={setUserPos} />
+        
+        {/* Рисуем синюю точку пользователя */}
+        {userPos && (
+          <Marker position={userPos} icon={new L.DivIcon({ className: 'user-location-icon', iconSize: [16, 16], iconAnchor: [8, 8] })}>
+            <Popup>Вы здесь</Popup>
+          </Marker>
+        )}
+
         {hotspots.length > 0 && <HeatmapLayer points={hotspots.map(h => [Number(h.lat), Number(h.lng), 0.8])} />}
+        
         {hotspots.map((spot) => (
           <Marker
             key={spot.id}
@@ -164,6 +169,11 @@ function App() {
         ))}
         {flyTarget && <FlyToSpot target={flyTarget} />}
       </MapContainer>
+
+      {/* Кнопка "Найти меня" */}
+      <button className="locate-me-btn" onClick={() => userPos && setFlyTarget({ position: [userPos.lat, userPos.lng], zoom: 16 })}>
+        🎯
+      </button>
 
       <div className="secret-box" onMouseDown={handleStart} onMouseUp={handleEnd} onTouchStart={handleStart} onTouchEnd={handleEnd}>i</div>
 
@@ -191,8 +201,7 @@ function App() {
           </div>
         </div>
       </div>
-      
-      {/* Search Overlay & Modal - оставить как было */}
+
       {searchOpen && (
         <div className="search-overlay">
           <div className="search-header">
