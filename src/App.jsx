@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import React, { useState, useRef, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -15,7 +16,6 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
 // --- КОНСТАНТЫ И НАСТРОЙКИ ---
-// ЗАМЕНИ НА СВОЙ URL ИЗ RENDER (обязательно с /api/points на конце)
 const BOT_API_URL = "https://taxibot-uha5.onrender.com/api/points";
 
 const cityCoords = {
@@ -69,30 +69,35 @@ function App() {
 
   // --- ЗАГРУЗКА ДАННЫХ (FIREBASE + BOT API) ---
   useEffect(() => {
-    // 1. Подписка на ручные точки из Firebase
+    console.log("🚀 Запуск загрузки для города:", userCity);
+
+    // 1. Подписка на Firebase (ручные точки)
     const unsubFirebase = onSnapshot(collection(db, "hotspots"), (snapshot) => {
       const firebaseData = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data(), source: 'manual' }))
         .filter(item => item.city === userCity || !item.city);
 
-      // 2. Запрос к API бота за авто-точками
+      // 2. Запрос к API бота (авто-точки)
       fetch(`${BOT_API_URL}?city=${encodeURIComponent(userCity)}`)
         .then(res => res.json())
         .then(botData => {
+          console.log("✅ Данные от бота получены:", botData);
+          
           const formattedBotData = botData.map(event => ({
             id: event._id,
-            lat: event.lat,
-            lng: event.lng,
+            lat: Number(event.lat), 
+            lng: Number(event.lng),
             label: event.title,
             description: event.address || "Мероприятие",
             time: dayjs(event.expireAt).format("HH:mm"),
             source: 'auto'
           }));
 
+          // Объединяем списки
           setHotspots([...firebaseData, ...formattedBotData]);
         })
         .catch(err => {
-          console.error("Ошибка API бота:", err);
+          console.error("❌ Ошибка API бота:", err);
           setHotspots(firebaseData);
         });
     });
@@ -100,7 +105,6 @@ function App() {
     return () => unsubFirebase();
   }, [userCity]);
 
-  // Остальная логика перемещения по клику
   useEffect(() => {
     if (flyTarget && flyTarget.id && markerRefs.current[flyTarget.id]) {
       setTimeout(() => {
@@ -161,10 +165,8 @@ function App() {
         {flyTarget && <FlyToSpot target={flyTarget} />}
       </MapContainer>
 
-      {/* Секретная кнопка добавления */}
       <div className="secret-box" onMouseDown={handleStart} onMouseUp={handleEnd} onTouchStart={handleStart} onTouchEnd={handleEnd}>i</div>
 
-      {/* Нижняя панель */}
       <div className={`bottom-panel ${isPanelCollapsed ? "collapsed" : ""}`}>
         <div className="panel-handle" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}></div>
         
@@ -192,7 +194,6 @@ function App() {
         </div>
       </div>
 
-      {/* Модалки поиска и добавления (без изменений) */}
       {searchOpen && (
         <div className="search-overlay">
           <div className="search-header">
