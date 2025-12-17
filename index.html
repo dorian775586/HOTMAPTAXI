@@ -1,10 +1,23 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>taxi-heatmap-vite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <title>Aiko Heatmap</title>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+      /* Тонкая настройка, чтобы убрать системные свайпы в Telegram */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+        overscroll-behavior: none; /* Отключает "резиновый" скролл в браузерах */
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

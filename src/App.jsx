@@ -16,7 +16,7 @@ L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
 // --- КОНСТАНТЫ И НАСТРОЙКИ ---
 // ЗАМЕНИ НА СВОЙ URL ИЗ RENDER (обязательно с /api/points на конце)
-const BOT_API_URL = "https://твой-хост-на-render.com/api/points"; 
+const BOT_API_URL = "https://taxibot-uha5.onrender.com/api/points";
 
 const cityCoords = {
   "Москва": [55.7558, 37.6173],
