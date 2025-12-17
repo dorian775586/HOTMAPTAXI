@@ -24,11 +24,12 @@ html, body, #root {
   z-index: 1;
 }
 
-/* Кнопка "Найти меня" (как в Яндексе) */
+/* Кнопка "Найти меня" (Яндекс-стайл) */
 .locate-me-btn {
   position: fixed;
   right: 15px;
-  bottom: 120px; /* Над нижней панелью */
+  /* Увеличили отступ, чтобы кнопка была выше панели (панель ~280px в развернутом виде) */
+  bottom: 300px; 
   width: 46px;
   height: 46px;
   background: white;
@@ -41,8 +42,11 @@ html, body, #root {
   cursor: pointer;
   border: none;
   font-size: 22px;
-  transition: transform 0.1s;
+  transition: transform 0.1s, bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+/* Если панель свернута, кнопку можно опустить чуть ниже (опционально) */
+/* Но для стабильности оставим фиксированно высоко */
 
 .locate-me-btn:active {
   transform: scale(0.92);
@@ -133,7 +137,7 @@ html, body, #root {
   line-height: 1.2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2; /* Стандартная версия */
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -182,7 +186,6 @@ html, body, #root {
 }
 @keyframes fire-pulse { 0% { transform: scale(1); opacity: 1; } 70% { transform: scale(4); opacity: 0; } 100% { opacity: 0; } }
 
-/* Синяя точка местоположения */
 .user-location-icon {
   background: #2196F3;
   border: 3px solid white;
