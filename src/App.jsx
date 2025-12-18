@@ -25,6 +25,14 @@ const cityCoords = {
   "Екатеринбург": [56.8389, 60.6057]
 };
 
+// --- ИКОНКА ТАКСИ С АНИМАЦИЕЙ ---
+const taxiIcon = new L.DivIcon({
+  className: "taxi-marker-animated",
+  html: `<div class="taxi-emoji">🚕</div>`,
+  iconSize: [25, 25],
+  iconAnchor: [12, 12],
+});
+
 // --- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ ЗОН ---
 const generateRandomZones = (center) => {
   if (!center) return [];
@@ -177,8 +185,8 @@ const BoostScreen = ({ onStatusChange }) => {
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    const secondsLeft = seconds % 60;
+    return `${mins}:${secondsLeft < 10 ? '0' : ''}${secondsLeft}`;
   };
 
   return (
@@ -232,7 +240,6 @@ const BoostScreen = ({ onStatusChange }) => {
         </div>
       )}
 
-      {/* ЮРИДИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ ПРИ ВКЛЮЧЕНИИ */}
       {showWarningModal && (
         <div className="modal-overlay">
           <div className="modal info-modal" style={{border: '2px solid #ff4444'}}>
@@ -288,6 +295,7 @@ const BoostScreen = ({ onStatusChange }) => {
 
 function App() {
   const [hotspots, setHotspots] = useState([]);
+  const [taxis, setTaxis] = useState([]); 
   const [userPos, setUserPos] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -347,10 +355,11 @@ function App() {
   useEffect(() => {
     const unsubFirebase = onSnapshot(collection(db, "hotspots"), (snapshot) => {
       const firebaseData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), source: 'manual' }));
-      fetch(BOT_API_URL)
+      
+      fetch(`${BOT_API_URL}?city=${encodeURIComponent(userCity)}`)
         .then(res => res.json())
-        .then(botData => {
-          const formattedBotData = botData.map(event => ({
+        .then(data => {
+          const formattedBotData = (data.events || []).map(event => ({
             id: event._id,
             lat: Number(event.lat), 
             lng: Number(event.lng),
@@ -360,11 +369,18 @@ function App() {
             source: 'auto'
           }));
           setHotspots([...firebaseData, ...formattedBotData]);
+
+          const formattedTaxis = (data.taxis || []).map(t => ({
+            id: t._id,
+            lat: Number(t.lat),
+            lng: Number(t.lng)
+          }));
+          setTaxis(formattedTaxis);
         })
         .catch(() => setHotspots(firebaseData));
     });
     return () => unsubFirebase();
-  }, []);
+  }, [userCity]);
 
   const handleStart = () => {
     timerRef.current = setTimeout(() => { setModalOpen(true); }, 2000);
@@ -403,7 +419,14 @@ function App() {
         ))}
 
         {userPos && <Marker position={userPos} icon={new L.DivIcon({ className: 'user-location-icon', iconSize: [16, 16], iconAnchor: [8, 8] })} />}
+        
+        {/* Отрисовка машинок такси */}
+        {taxis.map(taxi => (
+          <Marker key={taxi.id} position={[taxi.lat, taxi.lng]} icon={taxiIcon} />
+        ))}
+
         {hotspots.length > 0 && <HeatmapLayer points={hotspots.map(h => [Number(h.lat), Number(h.lng), 0.8])} />}
+        
         {hotspots.map((spot) => (
           <Marker key={spot.id} position={[Number(spot.lat), Number(spot.lng)]} icon={pulseIcon}>
             <Popup>
