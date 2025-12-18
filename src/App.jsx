@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { db } from "./firebase"; 
-import { collection, onSnapshot, addDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc } from "firebase/firestore";
 import HeatmapLayer from "./HeatmapLayer";
 import "./App.css";
 
@@ -58,6 +58,23 @@ const BoostScreen = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [regForm, setRegForm] = useState({ fio: "", carNumber: "", tariff: "Эконом" });
 
+  // Проверка актуальности аккаунта
+  useEffect(() => {
+    if (userData && userData.id) {
+      const userRef = doc(db, "users", userData.id);
+      const unsub = onSnapshot(userRef, (docSnap) => {
+        if (!docSnap.exists()) {
+          alert("Ваш аккаунт был удален. Пожалуйста, пройдите регистрацию заново.");
+          localStorage.removeItem("taxi_user_profile");
+          localStorage.removeItem("boost_end_time");
+          setUserData(null);
+          setStatus("off");
+        }
+      });
+      return () => unsub();
+    }
+  }, [userData]);
+
   useEffect(() => {
     const savedEndTime = localStorage.getItem("boost_end_time");
     if (savedEndTime) {
@@ -110,11 +127,21 @@ const BoostScreen = () => {
     }
   };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     if (regForm.fio && regForm.carNumber) {
-      localStorage.setItem("taxi_user_profile", JSON.stringify(regForm));
-      setUserData(regForm);
-      setShowRegModal(false);
+      try {
+        const docRef = await addDoc(collection(db, "users"), {
+          ...regForm,
+          createdAt: new Date().toISOString()
+        });
+        
+        const profileWithId = { ...regForm, id: docRef.id };
+        localStorage.setItem("taxi_user_profile", JSON.stringify(profileWithId));
+        setUserData(profileWithId);
+        setShowRegModal(false);
+      } catch (e) {
+        alert("Ошибка регистрации. Попробуйте позже.");
+      }
     } else {
       alert("Пожалуйста, заполните все данные!");
     }
@@ -129,10 +156,11 @@ const BoostScreen = () => {
   return (
     <div className="boost-container">
       <div className="boost-card">
-        <button className="how-it-works-top" onClick={() => setShowInfoModal(true)}>Как это работает?</button>
+        <button className="how-it-works-center" onClick={() => setShowInfoModal(true)}>Как это работает?</button>
         
         <div className="boost-header">
-          <span className="boost-icon">⚡️</span>
+          {/* Молния пульсирует, если статус "on" */}
+          <span className={`boost-icon ${status === "on" ? "pulsating" : ""}`}>⚡️</span>
           <h1>BOOST ACCOUNT</h1>
           <p className="driver-info">
             {userData ? `${userData.fio} | ${userData.carNumber} (${userData.tariff})` : "Данные отсутствуют"}
@@ -171,7 +199,6 @@ const BoostScreen = () => {
         </p>
       </div>
 
-      {/* Модалка регистрации */}
       {showRegModal && (
         <div className="modal-overlay">
           <div className="modal boost-reg-modal">
@@ -190,7 +217,6 @@ const BoostScreen = () => {
         </div>
       )}
 
-      {/* Модалка ИНФО */}
       {showInfoModal && (
         <div className="modal-overlay" onClick={() => setShowInfoModal(false)}>
           <div className="modal info-modal" onClick={e => e.stopPropagation()}>
@@ -204,19 +230,18 @@ const BoostScreen = () => {
         </div>
       )}
 
-      {/* Модалка СОГЛАШЕНИЯ */}
       {showTermsModal && (
         <div className="modal-overlay" onClick={() => setShowTermsModal(false)}>
           <div className="modal info-modal" onClick={e => e.stopPropagation()}>
             <h3>Условия использования</h3>
             <div className="info-content scrollable">
-              <p><strong>1. Общие положения</strong><br/>Использование программного модуля "Boost" (далее — ПО) осуществляется Пользователем добровольно на свой риск.</p>
-              <p><strong>2. Ограничение ответственности</strong><br/>Разработчик не гарантирует 100% рост заказов. Указанные проценты (+15%, +25%, +35%) являются теоретическими показателями интенсивности запросов ПО и носят исключительно информационный характер.</p>
-              <p><strong>3. Технические требования</strong><br/>Разработчик не несет ответственности за некорректную работу ПО в случае нестабильного интернет-соединения, сбоев в работе GPS-модуля устройства Пользователя или технических ограничений со стороны сторонних агрегаторов.</p>
-              <p><strong>4. Обязательства пользователя</strong><br/>Для достижения максимальной эффективности Пользователь обязуется следовать инструкциям раздела "Как это работает" и находиться в активных зонах карты HotMap.</p>
-              <p><strong>5. Отсутствие претензий</strong><br/>Активируя режим "Boost", Пользователь подтверждает, что не имеет и не будет иметь претензий к Разработчику в случае отсутствия ожидаемого финансового результата или блокировок со стороны третьих лиц.</p>
+              <p><strong>1. Общие положения</strong><br/>Использование модуля осуществляется на риск Пользователя.</p>
+              <p><strong>2. Ограничение ответственности</strong><br/>Разработчик не гарантирует 100% рост заказов. Проценты — теоретический показатель мощности алгоритма.</p>
+              <p><strong>3. Технические условия</strong><br/>Мы не несем ответственности за работу при плохом интернете или сбоях GPS.</p>
+              <p><strong>4. Обязательства</strong><br/>Нужно следовать HotMap и находиться в активных зонах.</p>
+              <p><strong>5. Отказ от претензий</strong><br/>Активируя Буст, вы отказываетесь от любых юридических претензий к Разработчику.</p>
             </div>
-            <button className="submit-button" onClick={() => setShowTermsModal(false)}>ПРИНЯТЬ</button>
+            <button className="submit-button" onClick={() => setShowTermsModal(false)}>Я ОЗНАКОМЛЕН(А)</button>
           </div>
         </div>
       )}
