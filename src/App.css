@@ -192,3 +192,69 @@ html, body, #root {
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
 }
+
+/* BOOST SCREEN STYLES */
+.boost-container {
+  height: 100vh;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  color: white;
+}
+
+.boost-card {
+  width: 90%;
+  max-width: 400px;
+  background: #222;
+  border-radius: 24px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.boost-icon { font-size: 50px; display: block; margin-bottom: 10px; }
+.driver-id { color: #888; font-size: 14px; margin-top: 5px; }
+
+.k-grid {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.k-btn {
+  background: #333;
+  border: 2px solid transparent;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.k-btn.active {
+  background: #ffcc00;
+  color: black;
+  border-color: #ffcc00;
+}
+
+.main-boost-btn {
+  width: 100%;
+  padding: 20px;
+  border-radius: 16px;
+  border: none;
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  cursor: pointer;
+  transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.main-boost-btn.off { background: #ff4444; box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4); }
+.main-boost-btn.loading { background: #555; cursor: wait; }
+.main-boost-btn.on { background: #00c851; box-shadow: 0 4px 15px rgba(0, 200, 81, 0.4); transform: scale(1.02); }
+
+.boost-hint { font-size: 12px; color: #666; margin-top: 15px; }

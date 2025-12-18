@@ -25,6 +25,7 @@ const cityCoords = {
   "Екатеринбург": [56.8389, 60.6057]
 };
 
+// --- КОМПОНЕНТЫ КАРТЫ (БЕЗ ИЗМЕНЕНИЙ) ---
 const UserLocation = ({ setUserPos }) => {
   const map = useMap();
   useEffect(() => {
@@ -45,6 +46,84 @@ const FlyToSpot = ({ target }) => {
   return null;
 };
 
+// --- НОВЫЙ КОМПОНЕНТ: ЭКРАН БУСТА ---
+const BoostScreen = ({ driverId }) => {
+  const [selectedK, setSelectedK] = useState(25);
+  const [status, setStatus] = useState("off"); // off, loading, on
+  const [timeLeft, setTimeLeft] = useState(3600); // 60 минут в секундах
+
+  useEffect(() => {
+    let timer;
+    if (status === "on" && timeLeft > 0) {
+      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    } else if (timeLeft === 0) {
+      setStatus("off");
+      setTimeLeft(3600);
+    }
+    return () => clearInterval(timer);
+  }, [status, timeLeft]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const handleToggle = () => {
+    if (status === "off") {
+      setStatus("loading");
+      setTimeout(() => {
+        setStatus("on");
+      }, 5000);
+    } else {
+      setStatus("off");
+      setTimeLeft(3600);
+    }
+  };
+
+  return (
+    <div className="boost-container">
+      <div className="boost-card">
+        <div className="boost-header">
+          <span className="boost-icon">⚡️</span>
+          <h1>BOOST ACCOUNT</h1>
+          <p className="driver-id">ID: {driverId}</p>
+        </div>
+
+        <div className="boost-options">
+          <p>Выберите коэффициент усиления:</p>
+          <div className="k-grid">
+            {[15, 25, 35].map(k => (
+              <button 
+                key={k} 
+                className={`k-btn ${selectedK === k ? 'active' : ''}`}
+                onClick={() => status === "off" && setSelectedK(k)}
+              >
+                +{k}%
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="boost-action">
+          <button 
+            className={`main-boost-btn ${status}`} 
+            onClick={handleToggle}
+            disabled={status === "loading"}
+          >
+            {status === "off" && "ВКЛЮЧИТЬ"}
+            {status === "loading" && "ПОДОЖДИТЕ..."}
+            {status === "on" && `АКТИВНО: ${formatTime(timeLeft)}`}
+          </button>
+          <p className="boost-hint">
+            {status === "on" ? "Приоритет в раздаче заказов повышен" : "Нажмите для активации приоритета на 60 мин"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [hotspots, setHotspots] = useState([]);
   const [userPos, setUserPos] = useState(null);
@@ -59,6 +138,8 @@ function App() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const userCity = urlParams.get('city') || "Москва";
+  const page = urlParams.get('page'); // Получаем страницу
+  const driverId = urlParams.get('id') || "Driver"; // Получаем ID для буста
   const defaultCenter = cityCoords[userCity] || cityCoords["Москва"];
 
   useEffect(() => {
@@ -80,7 +161,6 @@ function App() {
     const unsubFirebase = onSnapshot(collection(db, "hotspots"), (snapshot) => {
       const firebaseData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), source: 'manual' }));
 
-      // Запрашиваем ВСЕ точки (без фильтра по городу в URL)
       fetch(BOT_API_URL)
         .then(res => res.json())
         .then(botData => {
@@ -122,6 +202,11 @@ function App() {
       setModalOpen(false);
     } catch (err) { alert("Ошибка сохранения"); }
   };
+
+  // --- ЛОГИКА ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ ---
+  if (page === 'boost') {
+    return <BoostScreen driverId={driverId} />;
+  }
 
   return (
     <div className="App">
