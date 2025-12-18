@@ -25,7 +25,7 @@ const cityCoords = {
   "Екатеринбург": [56.8389, 60.6057]
 };
 
-// --- КОМПОНЕНТЫ КАРТЫ (БЕЗ ИЗМЕНЕНИЙ) ---
+// --- КОМПОНЕНТЫ КАРТЫ ---
 const UserLocation = ({ setUserPos }) => {
   const map = useMap();
   useEffect(() => {
@@ -52,11 +52,12 @@ const BoostScreen = () => {
   const [status, setStatus] = useState("off"); 
   const [timeLeft, setTimeLeft] = useState(3600);
   const [userData, setUserData] = useState(JSON.parse(localStorage.getItem("taxi_user_profile")) || null);
+  const [agreed, setAgreed] = useState(false);
   const [showRegModal, setShowRegModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [regForm, setRegForm] = useState({ fio: "", carNumber: "", tariff: "Эконом" });
 
-  // Синхронизация таймера при загрузке
   useEffect(() => {
     const savedEndTime = localStorage.getItem("boost_end_time");
     if (savedEndTime) {
@@ -70,7 +71,6 @@ const BoostScreen = () => {
     }
   }, []);
 
-  // Логика отсчета
   useEffect(() => {
     let timer;
     if (status === "on" && timeLeft > 0) {
@@ -87,6 +87,10 @@ const BoostScreen = () => {
   }, [status, timeLeft]);
 
   const handleToggle = () => {
+    if (!agreed) {
+      alert("Необходимо принять условия пользовательского соглашения");
+      return;
+    }
     if (!userData) {
       setShowRegModal(true);
       return;
@@ -109,7 +113,7 @@ const BoostScreen = () => {
   const saveProfile = () => {
     if (regForm.fio && regForm.carNumber) {
       localStorage.setItem("taxi_user_profile", JSON.stringify(regForm));
-      setUserData(regForm); // Мгновенное обновление в интерфейсе
+      setUserData(regForm);
       setShowRegModal(false);
     } else {
       alert("Пожалуйста, заполните все данные!");
@@ -125,6 +129,8 @@ const BoostScreen = () => {
   return (
     <div className="boost-container">
       <div className="boost-card">
+        <button className="how-it-works-top" onClick={() => setShowInfoModal(true)}>Как это работает?</button>
+        
         <div className="boost-header">
           <span className="boost-icon">⚡️</span>
           <h1>BOOST ACCOUNT</h1>
@@ -142,7 +148,14 @@ const BoostScreen = () => {
               </button>
             ))}
           </div>
-          <button className="how-it-works-btn" onClick={() => setShowInfoModal(true)}>Как это работает?</button>
+        </div>
+
+        <div className="terms-checkbox-container">
+          <label className="checkbox-label">
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+            <span className="checkbox-custom"></span>
+            <span className="checkbox-text">Я согласен с <span className="terms-link" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }}>Условиями пользования</span></span>
+          </label>
         </div>
 
         <div className="boost-action">
@@ -152,9 +165,9 @@ const BoostScreen = () => {
             {status === "on" && `АКТИВНО: ${formatTime(timeLeft)}`}
           </button>
         </div>
-
+        
         <p className="legal-disclaimer">
-          * Указанный процент усиления является оценочным показателем вычислительной мощности алгоритма и не гарантирует пропорциональный рост количества заказов. Разработчик не несет ответственности за алгоритмы распределения сторонних агрегаторов и отсутствие заказов в конкретной локации.
+          * Оценочный показатель. Не является публичной офертой.
         </p>
       </div>
 
@@ -182,11 +195,28 @@ const BoostScreen = () => {
         <div className="modal-overlay" onClick={() => setShowInfoModal(false)}>
           <div className="modal info-modal" onClick={e => e.stopPropagation()}>
             <h3>О режиме Буст</h3>
-            <div className="info-content">
+            <div className="info-content scrollable">
               <p>Режим "буст" используется водителями для увеличения частоты выдачи заказов используемым агрегатором водителю, что может приводить к росту поступающих заказов от клиентов агрегатора.</p>
               <p><strong>ВАЖНО!</strong> Корректная работа данного раздела неразрывно связана с использованием водителем встроенной карты "HotMap", следованию её рекомендаций и нахождения водителя в "фиолетовых зонах" карты.</p>
             </div>
             <button className="submit-button" onClick={() => setShowInfoModal(false)}>ПОНЯТНО</button>
+          </div>
+        </div>
+      )}
+
+      {/* Модалка СОГЛАШЕНИЯ */}
+      {showTermsModal && (
+        <div className="modal-overlay" onClick={() => setShowTermsModal(false)}>
+          <div className="modal info-modal" onClick={e => e.stopPropagation()}>
+            <h3>Условия использования</h3>
+            <div className="info-content scrollable">
+              <p><strong>1. Общие положения</strong><br/>Использование программного модуля "Boost" (далее — ПО) осуществляется Пользователем добровольно на свой риск.</p>
+              <p><strong>2. Ограничение ответственности</strong><br/>Разработчик не гарантирует 100% рост заказов. Указанные проценты (+15%, +25%, +35%) являются теоретическими показателями интенсивности запросов ПО и носят исключительно информационный характер.</p>
+              <p><strong>3. Технические требования</strong><br/>Разработчик не несет ответственности за некорректную работу ПО в случае нестабильного интернет-соединения, сбоев в работе GPS-модуля устройства Пользователя или технических ограничений со стороны сторонних агрегаторов.</p>
+              <p><strong>4. Обязательства пользователя</strong><br/>Для достижения максимальной эффективности Пользователь обязуется следовать инструкциям раздела "Как это работает" и находиться в активных зонах карты HotMap.</p>
+              <p><strong>5. Отсутствие претензий</strong><br/>Активируя режим "Boost", Пользователь подтверждает, что не имеет и не будет иметь претензий к Разработчику в случае отсутствия ожидаемого финансового результата или блокировок со стороны третьих лиц.</p>
+            </div>
+            <button className="submit-button" onClick={() => setShowTermsModal(false)}>ПРИНЯТЬ</button>
           </div>
         </div>
       )}
