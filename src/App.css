@@ -215,7 +215,17 @@ html, body, #root {
 }
 
 .boost-icon { font-size: 50px; display: block; margin-bottom: 10px; }
-.driver-id { color: #888; font-size: 14px; margin-top: 5px; }
+
+/* ОБНОВЛЕННЫЙ СТИЛЬ ДЛЯ ИНФО О ВОДИТЕЛЕ */
+.driver-info { 
+  color: #ffcc00; 
+  font-size: 14px; 
+  margin-top: 5px; 
+  font-weight: 700;
+  background: rgba(255, 204, 0, 0.1);
+  padding: 8px;
+  border-radius: 8px;
+}
 
 .k-grid {
   display: flex;
@@ -258,3 +268,46 @@ html, body, #root {
 .main-boost-btn.on { background: #00c851; box-shadow: 0 4px 15px rgba(0, 200, 81, 0.4); transform: scale(1.02); }
 
 .boost-hint { font-size: 12px; color: #666; margin-top: 15px; }
+
+/* НОВЫЕ СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА РЕГИСТРАЦИИ БУСТА */
+.boost-reg-modal {
+  background: #111 !important;
+  border: 2px solid #333;
+}
+
+.boost-reg-modal input, .boost-reg-modal select {
+  width: 100%;
+  padding: 14px;
+  margin: 8px 0;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background: #222;
+  color: white;
+  box-sizing: border-box;
+  font-size: 16px;
+  outline: none;
+}
+
+.boost-reg-modal input:focus {
+  border-color: #ffcc00;
+}
+
+.boost-reg-modal select {
+  cursor: pointer;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+}
+
+.close-modal-btn {
+  background: transparent;
+  color: #666;
+  border: none;
+  margin-top: 15px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  text-decoration: underline;
+}
