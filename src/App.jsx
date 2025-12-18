@@ -29,20 +29,19 @@ const cityCoords = {
 const generateRandomZones = (center) => {
   if (!center) return [];
   const zones = [];
-  const numZones = Math.floor(Math.random() * 2) + 1; // 1 или 2 зоны
+  const numZones = Math.floor(Math.random() * 2) + 2; 
 
   for (let i = 0; i < numZones; i++) {
     const angle = Math.random() * Math.PI * 2;
-    // Радиус от 4 до 10 км (в градусах примерно 0.04 - 0.1)
-    const distance = 0.04 + Math.random() * 0.06; 
+    const distance = 0.035 + Math.random() * 0.055; 
     const zLat = center.lat + Math.sin(angle) * distance;
     const zLng = center.lng + Math.cos(angle) * distance;
 
     const points = [];
-    const numPoints = 7; // Неровный многоугольник
+    const numPoints = 8; 
     for (let p = 0; p < numPoints; p++) {
       const pAngle = (p / numPoints) * Math.PI * 2;
-      const pDist = 0.005 + Math.random() * 0.007; 
+      const pDist = 0.006 + Math.random() * 0.009; 
       points.push([
         zLat + Math.sin(pAngle) * pDist,
         zLng + Math.cos(pAngle) * pDist
@@ -84,20 +83,20 @@ const BoostScreen = ({ onStatusChange }) => {
   const [showRegModal, setShowRegModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false); 
   const [regForm, setRegForm] = useState({ fio: "", carNumber: "", tariff: "Эконом" });
 
-  // Проверка актуальности аккаунта
   useEffect(() => {
     if (userData && userData.id) {
       const userRef = doc(db, "users", userData.id);
       const unsub = onSnapshot(userRef, (docSnap) => {
         if (!docSnap.exists()) {
-          alert("Ваш аккаунт был удален. Пожалуйста, пройдите регистрацию заново.");
           localStorage.removeItem("taxi_user_profile");
           localStorage.removeItem("boost_end_time");
           setUserData(null);
           setStatus("off");
           if (onStatusChange) onStatusChange("off");
+          alert("Ваш профиль был деактивирован администратором. Для продолжения работы пройдите регистрацию повторно.");
         }
       });
       return () => unsub();
@@ -152,6 +151,7 @@ const BoostScreen = ({ onStatusChange }) => {
         setStatus("on");
         setTimeLeft(3600);
         if (onStatusChange) onStatusChange("on");
+        setShowWarningModal(true); 
       }, 5000);
     } else {
       setStatus("off");
@@ -167,17 +167,12 @@ const BoostScreen = ({ onStatusChange }) => {
           ...regForm,
           createdAt: new Date().toISOString()
         });
-        
         const profileWithId = { ...regForm, id: docRef.id };
         localStorage.setItem("taxi_user_profile", JSON.stringify(profileWithId));
         setUserData(profileWithId);
         setShowRegModal(false);
-      } catch (e) {
-        alert("Ошибка регистрации. Попробуйте позже.");
-      }
-    } else {
-      alert("Пожалуйста, заполните все данные!");
-    }
+      } catch (e) { alert("Ошибка регистрации"); }
+    } else { alert("Заполните все данные!"); }
   };
 
   const formatTime = (seconds) => {
@@ -190,7 +185,6 @@ const BoostScreen = ({ onStatusChange }) => {
     <div className="boost-container">
       <div className="boost-card">
         <button className="how-it-works-center" onClick={() => setShowInfoModal(true)}>Как это работает?</button>
-        
         <div className="boost-header">
           <span className={`boost-icon ${status === "on" ? "pulsating" : ""}`}>⚡️</span>
           <h1>BOOST ACCOUNT</h1>
@@ -198,18 +192,14 @@ const BoostScreen = ({ onStatusChange }) => {
             {userData ? `${userData.fio} | ${userData.carNumber} (${userData.tariff})` : "Данные отсутствуют"}
           </p>
         </div>
-
         <div className="boost-options">
           <p>Коэффициент усиления:</p>
           <div className="k-grid">
             {[15, 25, 35].map(k => (
-              <button key={k} className={`k-btn ${selectedK === k ? 'active' : ''}`} onClick={() => status === "off" && setSelectedK(k)}>
-                +{k}%
-              </button>
+              <button key={k} className={`k-btn ${selectedK === k ? 'active' : ''}`} onClick={() => status === "off" && setSelectedK(k)}>+{k}%</button>
             ))}
           </div>
         </div>
-
         <div className="terms-checkbox-container">
           <label className="checkbox-label">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
@@ -217,7 +207,6 @@ const BoostScreen = ({ onStatusChange }) => {
             <span className="checkbox-text">Я согласен с <span className="terms-link" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }}>Условиями пользования</span></span>
           </label>
         </div>
-
         <div className="boost-action">
           <button className={`main-boost-btn ${status}`} onClick={handleToggle} disabled={status === "loading"}>
             {status === "off" && "ВКЛЮЧИТЬ"}
@@ -225,10 +214,7 @@ const BoostScreen = ({ onStatusChange }) => {
             {status === "on" && `АКТИВНО: ${formatTime(timeLeft)}`}
           </button>
         </div>
-        
-        <p className="legal-disclaimer">
-          * Оценочный показатель. Не является публичной офертой.
-        </p>
+        <p className="legal-disclaimer">* Оценочный показатель. Не является публичной офертой.</p>
       </div>
 
       {showRegModal && (
@@ -238,13 +224,35 @@ const BoostScreen = ({ onStatusChange }) => {
             <input placeholder="ФИО водителя" value={regForm.fio} onChange={e => setRegForm({...regForm, fio: e.target.value})} />
             <input placeholder="Гос. номер (А000АА)" value={regForm.carNumber} onChange={e => setRegForm({...regForm, carNumber: e.target.value})} />
             <select value={regForm.tariff} onChange={e => setRegForm({...regForm, tariff: e.target.value})}>
-              <option>Эконом</option>
-              <option>Комфорт</option>
-              <option>Комфорт+</option>
-              <option>Элит</option>
+              <option>Эконом</option><option>Комфорт</option><option>Комфорт+</option><option>Элит</option>
             </select>
             <button className="submit-button" onClick={saveProfile}>АКТИВИРОВАТЬ ПРОФИЛЬ</button>
             <button className="close-modal-btn" onClick={() => setShowRegModal(false)}>Назад</button>
+          </div>
+        </div>
+      )}
+
+      {/* ЮРИДИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ ПРИ ВКЛЮЧЕНИИ */}
+      {showWarningModal && (
+        <div className="modal-overlay">
+          <div className="modal info-modal" style={{border: '2px solid #ff4444'}}>
+            <h3 style={{color: '#ff4444'}}>ВНИМАНИЕ!!!</h3>
+            <div className="info-content scrollable">
+              <p style={{fontWeight: '700', fontSize: '14px', textAlign: 'justify'}}>
+                Используемое Вами программное обеспечение является сторонним модулем расширения функционала. 
+              </p>
+              <p style={{fontSize: '13px', textAlign: 'justify'}}>
+                В случае возникновения технических сбоев, некорректной работы алгоритмов или системы <strong>HotMap</strong>, 
+                категорически <u>запрещено</u> обращаться в службу технической поддержки <strong>Яндекс</strong> или иных агрегаторов. 
+              </p>
+              <p style={{fontSize: '13px', color: '#ffcc00', fontWeight: '600'}}>
+                Для решения любых вопросов, связанных с работоспособностью системы, используйте исключительно кнопку «Техподдержка» в главном меню Вашего бота.
+              </p>
+              <p style={{fontSize: '12px', opacity: '0.8', textAlign: 'justify'}}>
+                Любое упоминание данного ПО в официальных каналах поддержки сторонних агрегаторов может повлечь за собой перманентную блокировку водительского аккаунта без права восстановления.
+              </p>
+            </div>
+            <button className="submit-button" style={{background: '#ff4444', color: 'white'}} onClick={() => setShowWarningModal(false)}>ОЗНАКОМЛЕН, УБРАТЬ</button>
           </div>
         </div>
       )}
@@ -254,8 +262,8 @@ const BoostScreen = ({ onStatusChange }) => {
           <div className="modal info-modal" onClick={e => e.stopPropagation()}>
             <h3>О режиме Буст</h3>
             <div className="info-content scrollable">
-              <p>Режим "буст" используется водителями для увеличения частоты выдачи заказов используемым агрегатором водителю, что может приводить к росту поступающих заказов от клиентов агрегатора.</p>
-              <p><strong>ВАЖНО!</strong> Корректная работа данного раздела неразрывно связана с использованием водителем встроенной карты "HotMap", следованию её рекомендаций и нахождения водителя в "фиолетовых зонах" карты.</p>
+              <p>Режим "буст" используется водителями для увеличения частоты выдачи заказов...</p>
+              <p><strong>ВАЖНО!</strong> Следуйте рекомендациям "фиолетовых зон" карты.</p>
             </div>
             <button className="submit-button" onClick={() => setShowInfoModal(false)}>ПОНЯТНО</button>
           </div>
@@ -268,10 +276,7 @@ const BoostScreen = ({ onStatusChange }) => {
             <h3>Условия использования</h3>
             <div className="info-content scrollable">
               <p><strong>1. Общие положения</strong><br/>Использование модуля осуществляется на риск Пользователя.</p>
-              <p><strong>2. Ограничение ответственности</strong><br/>Разработчик не гарантирует 100% рост заказов. Проценты — теоретический показатель мощности алгоритма.</p>
-              <p><strong>3. Технические условия</strong><br/>Мы не несем ответственности за работу при плохом интернете или сбоях GPS.</p>
-              <p><strong>4. Обязательства</strong><br/>Нужно следовать HotMap и находиться в активных зонах.</p>
-              <p><strong>5. Отказ от претензий</strong><br/>Активируя Буст, вы отказываетесь от любых юридических претензий к Разработчику.</p>
+              <p>Активируя Буст, вы отказываетесь от претензий.</p>
             </div>
             <button className="submit-button" onClick={() => setShowTermsModal(false)}>Я ОЗНАКОМЛЕН(А)</button>
           </div>
@@ -290,19 +295,32 @@ function App() {
   const [query, setQuery] = useState("");
   const [newSpot, setNewSpot] = useState({ lat: "", lng: "", label: "", description: "", time: "" });
   const [flyTarget, setFlyTarget] = useState(null);
+  
   const [boostActive, setBoostActive] = useState(false);
+  const [secretZones, setSecretZones] = useState([]);
+  
   const timerRef = useRef(null);
+  const zonesTimerRef = useRef(null);
 
   const urlParams = new URLSearchParams(window.location.search);
   const userCity = urlParams.get('city') || "Москва";
   const page = urlParams.get('page');
 
-  // Генерация секретных зон через useMemo, чтобы они не пересоздавались при каждом рендере
-  const secretZones = useMemo(() => {
+  useEffect(() => {
+    const updateZones = () => {
+      if (boostActive && userPos) {
+        setSecretZones(generateRandomZones(userPos));
+      }
+    };
+
     if (boostActive && userPos) {
-      return generateRandomZones(userPos);
+      if (secretZones.length === 0) updateZones();
+      zonesTimerRef.current = setInterval(updateZones, 600000); 
+    } else {
+      if (!boostActive) setSecretZones([]);
+      clearInterval(zonesTimerRef.current);
     }
-    return [];
+    return () => clearInterval(zonesTimerRef.current);
   }, [boostActive, userPos]);
 
   useEffect(() => {
@@ -312,12 +330,10 @@ function App() {
     }
   }, []);
 
-  // Проверка статуса буста при загрузке основной страницы
   useEffect(() => {
     const savedEndTime = localStorage.getItem("boost_end_time");
     if (savedEndTime) {
-      const remaining = Number(savedEndTime) - Date.now();
-      if (remaining > 0) setBoostActive(true);
+      if (Number(savedEndTime) - Date.now() > 0) setBoostActive(true);
     }
   }, []);
 
@@ -351,9 +367,7 @@ function App() {
   }, []);
 
   const handleStart = () => {
-    timerRef.current = setTimeout(() => {
-      setModalOpen(true);
-    }, 2000);
+    timerRef.current = setTimeout(() => { setModalOpen(true); }, 2000);
   };
   const handleEnd = () => clearTimeout(timerRef.current);
 
@@ -363,7 +377,7 @@ function App() {
       await addDoc(collection(db, "hotspots"), { ...newSpot, city: userCity, lat: parseFloat(newSpot.lat), lng: parseFloat(newSpot.lng), intensity: 5 });
       setNewSpot({ lat: "", lng: "", label: "", description: "", time: "" });
       setModalOpen(false);
-    } catch (err) { alert("Ошибка сохранения"); }
+    } catch (err) { alert("Ошибка"); }
   };
 
   if (page === 'boost') return <BoostScreen onStatusChange={(s) => setBoostActive(s === "on")} />;
@@ -374,14 +388,13 @@ function App() {
         <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
         <UserLocation setUserPos={setUserPos} />
         
-        {/* ОТОБРАЖЕНИЕ СЕКРЕТНЫХ ФИОЛЕТОВЫХ ЗОН ПРИ БУСТЕ */}
         {boostActive && secretZones.map((zone, idx) => (
           <Polygon 
-            key={idx}
+            key={`${idx}-${zone[0][0]}`} 
             positions={zone}
             pathOptions={{
               fillColor: '#8e44ad',
-              fillOpacity: 0.6,
+              fillOpacity: 0.5,
               color: '#9b59b6',
               weight: 2,
               className: 'pulsating-zone'
