@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import React, { useState, useRef, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polygon } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { db } from "./firebase"; 
@@ -25,6 +25,34 @@ const cityCoords = {
   "Екатеринбург": [56.8389, 60.6057]
 };
 
+// --- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ ЗОН ---
+const generateRandomZones = (center) => {
+  if (!center) return [];
+  const zones = [];
+  const numZones = Math.floor(Math.random() * 2) + 1; // 1 или 2 зоны
+
+  for (let i = 0; i < numZones; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    // Радиус от 4 до 10 км (в градусах примерно 0.04 - 0.1)
+    const distance = 0.04 + Math.random() * 0.06; 
+    const zLat = center.lat + Math.sin(angle) * distance;
+    const zLng = center.lng + Math.cos(angle) * distance;
+
+    const points = [];
+    const numPoints = 7; // Неровный многоугольник
+    for (let p = 0; p < numPoints; p++) {
+      const pAngle = (p / numPoints) * Math.PI * 2;
+      const pDist = 0.005 + Math.random() * 0.007; 
+      points.push([
+        zLat + Math.sin(pAngle) * pDist,
+        zLng + Math.cos(pAngle) * pDist
+      ]);
+    }
+    zones.push(points);
+  }
+  return zones;
+};
+
 // --- КОМПОНЕНТЫ КАРТЫ ---
 const UserLocation = ({ setUserPos }) => {
   const map = useMap();
@@ -47,7 +75,7 @@ const FlyToSpot = ({ target }) => {
 };
 
 // --- КОМПОНЕНТ: ЭКРАН БУСТА ---
-const BoostScreen = () => {
+const BoostScreen = ({ onStatusChange }) => {
   const [selectedK, setSelectedK] = useState(25);
   const [status, setStatus] = useState("off"); 
   const [timeLeft, setTimeLeft] = useState(3600);
@@ -69,11 +97,12 @@ const BoostScreen = () => {
           localStorage.removeItem("boost_end_time");
           setUserData(null);
           setStatus("off");
+          if (onStatusChange) onStatusChange("off");
         }
       });
       return () => unsub();
     }
-  }, [userData]);
+  }, [userData, onStatusChange]);
 
   useEffect(() => {
     const savedEndTime = localStorage.getItem("boost_end_time");
@@ -82,11 +111,12 @@ const BoostScreen = () => {
       if (remaining > 0) {
         setStatus("on");
         setTimeLeft(remaining);
+        if (onStatusChange) onStatusChange("on");
       } else {
         localStorage.removeItem("boost_end_time");
       }
     }
-  }, []);
+  }, [onStatusChange]);
 
   useEffect(() => {
     let timer;
@@ -97,11 +127,12 @@ const BoostScreen = () => {
         if (newTime <= 0) {
           setStatus("off");
           localStorage.removeItem("boost_end_time");
+          if (onStatusChange) onStatusChange("off");
         }
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [status, timeLeft]);
+  }, [status, timeLeft, onStatusChange]);
 
   const handleToggle = () => {
     if (!agreed) {
@@ -120,10 +151,12 @@ const BoostScreen = () => {
         localStorage.setItem("boost_end_time", endTime.toString());
         setStatus("on");
         setTimeLeft(3600);
+        if (onStatusChange) onStatusChange("on");
       }, 5000);
     } else {
       setStatus("off");
       localStorage.removeItem("boost_end_time");
+      if (onStatusChange) onStatusChange("off");
     }
   };
 
@@ -159,7 +192,6 @@ const BoostScreen = () => {
         <button className="how-it-works-center" onClick={() => setShowInfoModal(true)}>Как это работает?</button>
         
         <div className="boost-header">
-          {/* Молния пульсирует, если статус "on" */}
           <span className={`boost-icon ${status === "on" ? "pulsating" : ""}`}>⚡️</span>
           <h1>BOOST ACCOUNT</h1>
           <p className="driver-info">
@@ -258,16 +290,34 @@ function App() {
   const [query, setQuery] = useState("");
   const [newSpot, setNewSpot] = useState({ lat: "", lng: "", label: "", description: "", time: "" });
   const [flyTarget, setFlyTarget] = useState(null);
+  const [boostActive, setBoostActive] = useState(false);
   const timerRef = useRef(null);
 
   const urlParams = new URLSearchParams(window.location.search);
   const userCity = urlParams.get('city') || "Москва";
   const page = urlParams.get('page');
 
+  // Генерация секретных зон через useMemo, чтобы они не пересоздавались при каждом рендере
+  const secretZones = useMemo(() => {
+    if (boostActive && userPos) {
+      return generateRandomZones(userPos);
+    }
+    return [];
+  }, [boostActive, userPos]);
+
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
+    }
+  }, []);
+
+  // Проверка статуса буста при загрузке основной страницы
+  useEffect(() => {
+    const savedEndTime = localStorage.getItem("boost_end_time");
+    if (savedEndTime) {
+      const remaining = Number(savedEndTime) - Date.now();
+      if (remaining > 0) setBoostActive(true);
     }
   }, []);
 
@@ -316,13 +366,29 @@ function App() {
     } catch (err) { alert("Ошибка сохранения"); }
   };
 
-  if (page === 'boost') return <BoostScreen />;
+  if (page === 'boost') return <BoostScreen onStatusChange={(s) => setBoostActive(s === "on")} />;
 
   return (
     <div className="App">
       <MapContainer className="map-container" center={cityCoords[userCity] || cityCoords["Москва"]} zoom={11} zoomControl={false}>
         <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
         <UserLocation setUserPos={setUserPos} />
+        
+        {/* ОТОБРАЖЕНИЕ СЕКРЕТНЫХ ФИОЛЕТОВЫХ ЗОН ПРИ БУСТЕ */}
+        {boostActive && secretZones.map((zone, idx) => (
+          <Polygon 
+            key={idx}
+            positions={zone}
+            pathOptions={{
+              fillColor: '#8e44ad',
+              fillOpacity: 0.6,
+              color: '#9b59b6',
+              weight: 2,
+              className: 'pulsating-zone'
+            }}
+          />
+        ))}
+
         {userPos && <Marker position={userPos} icon={new L.DivIcon({ className: 'user-location-icon', iconSize: [16, 16], iconAnchor: [8, 8] })} />}
         {hotspots.length > 0 && <HeatmapLayer points={hotspots.map(h => [Number(h.lat), Number(h.lng), 0.8])} />}
         {hotspots.map((spot) => (
@@ -347,7 +413,9 @@ function App() {
         <div className="panel-handle" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}></div>
         <div className="search-trigger" onClick={() => isPanelCollapsed ? setIsPanelCollapsed(false) : setSearchOpen(true)}>
           <span className="search-icon">🔍</span>
-          <span className="search-text">Поиск в г. {userCity}</span>
+          <span className="search-text">
+             Поиск в г. {userCity} {boostActive && <span style={{color: '#8e44ad', marginLeft: '5px'}}>⚡️ BOOST</span>}
+          </span>
         </div>
         <div className="panel-content">
           <p className="panel-label">АКТУАЛЬНЫЕ ТОЧКИ 🔥</p>
