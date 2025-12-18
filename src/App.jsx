@@ -25,7 +25,7 @@ const cityCoords = {
   "Екатеринбург": [56.8389, 60.6057]
 };
 
-// --- КОМПОНЕНТЫ КАРТЫ ---
+// --- КОМПОНЕНТЫ КАРТЫ (БЕЗ ИЗМЕНЕНИЙ) ---
 const UserLocation = ({ setUserPos }) => {
   const map = useMap();
   useEffect(() => {
@@ -53,9 +53,10 @@ const BoostScreen = () => {
   const [timeLeft, setTimeLeft] = useState(3600);
   const [userData, setUserData] = useState(JSON.parse(localStorage.getItem("taxi_user_profile")) || null);
   const [showRegModal, setShowRegModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const [regForm, setRegForm] = useState({ fio: "", carNumber: "", tariff: "Эконом" });
 
-  // Логика таймера и сохранения состояния
+  // Синхронизация таймера при загрузке
   useEffect(() => {
     const savedEndTime = localStorage.getItem("boost_end_time");
     if (savedEndTime) {
@@ -69,6 +70,7 @@ const BoostScreen = () => {
     }
   }, []);
 
+  // Логика отсчета
   useEffect(() => {
     let timer;
     if (status === "on" && timeLeft > 0) {
@@ -107,7 +109,7 @@ const BoostScreen = () => {
   const saveProfile = () => {
     if (regForm.fio && regForm.carNumber) {
       localStorage.setItem("taxi_user_profile", JSON.stringify(regForm));
-      setUserData(regForm);
+      setUserData(regForm); // Мгновенное обновление в интерфейсе
       setShowRegModal(false);
     } else {
       alert("Пожалуйста, заполните все данные!");
@@ -127,7 +129,7 @@ const BoostScreen = () => {
           <span className="boost-icon">⚡️</span>
           <h1>BOOST ACCOUNT</h1>
           <p className="driver-info">
-            {userData ? `${userData.fio} | ${userData.carNumber}` : "Данные отсутствуют"}
+            {userData ? `${userData.fio} | ${userData.carNumber} (${userData.tariff})` : "Данные отсутствуют"}
           </p>
         </div>
 
@@ -140,6 +142,7 @@ const BoostScreen = () => {
               </button>
             ))}
           </div>
+          <button className="how-it-works-btn" onClick={() => setShowInfoModal(true)}>Как это работает?</button>
         </div>
 
         <div className="boost-action">
@@ -149,14 +152,18 @@ const BoostScreen = () => {
             {status === "on" && `АКТИВНО: ${formatTime(timeLeft)}`}
           </button>
         </div>
+
+        <p className="legal-disclaimer">
+          * Указанный процент усиления является оценочным показателем вычислительной мощности алгоритма и не гарантирует пропорциональный рост количества заказов. Разработчик не несет ответственности за алгоритмы распределения сторонних агрегаторов и отсутствие заказов в конкретной локации.
+        </p>
       </div>
 
+      {/* Модалка регистрации */}
       {showRegModal && (
         <div className="modal-overlay">
           <div className="modal boost-reg-modal">
-            <h3>Регистрация устройства</h3>
-            <p>Для активации буста введите данные:</p>
-            <input placeholder="ФИО" value={regForm.fio} onChange={e => setRegForm({...regForm, fio: e.target.value})} />
+            <h3>Регистрация данных</h3>
+            <input placeholder="ФИО водителя" value={regForm.fio} onChange={e => setRegForm({...regForm, fio: e.target.value})} />
             <input placeholder="Гос. номер (А000АА)" value={regForm.carNumber} onChange={e => setRegForm({...regForm, carNumber: e.target.value})} />
             <select value={regForm.tariff} onChange={e => setRegForm({...regForm, tariff: e.target.value})}>
               <option>Эконом</option>
@@ -164,8 +171,22 @@ const BoostScreen = () => {
               <option>Комфорт+</option>
               <option>Элит</option>
             </select>
-            <button className="submit-button" onClick={saveProfile}>СОХРАНИТЬ</button>
-            <button className="close-modal-btn" onClick={() => setShowRegModal(false)}>Отмена</button>
+            <button className="submit-button" onClick={saveProfile}>АКТИВИРОВАТЬ ПРОФИЛЬ</button>
+            <button className="close-modal-btn" onClick={() => setShowRegModal(false)}>Назад</button>
+          </div>
+        </div>
+      )}
+
+      {/* Модалка ИНФО */}
+      {showInfoModal && (
+        <div className="modal-overlay" onClick={() => setShowInfoModal(false)}>
+          <div className="modal info-modal" onClick={e => e.stopPropagation()}>
+            <h3>О режиме Буст</h3>
+            <div className="info-content">
+              <p>Режим "буст" используется водителями для увеличения частоты выдачи заказов используемым агрегатором водителю, что может приводить к росту поступающих заказов от клиентов агрегатора.</p>
+              <p><strong>ВАЖНО!</strong> Корректная работа данного раздела неразрывно связана с использованием водителем встроенной карты "HotMap", следованию её рекомендаций и нахождения водителя в "фиолетовых зонах" карты.</p>
+            </div>
+            <button className="submit-button" onClick={() => setShowInfoModal(false)}>ПОНЯТНО</button>
           </div>
         </div>
       )}
